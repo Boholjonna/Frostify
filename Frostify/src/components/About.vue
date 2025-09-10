@@ -29,6 +29,7 @@
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Kavoon&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
 
 .about-section {
   width: 100vw;
@@ -40,12 +41,12 @@
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .about-content {
   width: 100%;
-  height: 100%;
+  height: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -59,22 +60,29 @@
   max-width: 800px;
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-left: 50px;
+  border-bottom: 1px solid rgb(255, 0, 72);
 }
 
 .here-in {
   font-family: 'Kavoon', cursive;
   font-size: clamp(40px, 8vw, 80px);
   color: white;
-  -webkit-text-stroke: 1px #FF8787;
-  margin-bottom: 1rem;
+  -webkit-text-stroke: 2.5px #FF8787;
+  margin-top: 3rem;
+  margin-bottom: 0;
   opacity: 0;
   animation: dropDown 1s ease forwards;
 }
 
 .logo-container {
   position: relative;
-  width: 100%;
-  margin: 2rem 0;
+  width: fit-content;
+  margin: 2rem auto;
   overflow: hidden;
 }
 
@@ -86,7 +94,7 @@
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  text-align: left;
+  text-align: center;
   animation: slideRight 1.5s ease forwards, gradientMove 5s linear infinite;
   margin: 0;
   padding: 0;
@@ -108,19 +116,20 @@
 
 .tagline {
   font-family: 'Kavoon', cursive;
-  color: #ED1F2D;
-  font-size: clamp(18px, 3vw, 24px);
-  -webkit-text-stroke: 2px white;
-  margin: 2rem 0;
+  color: #ff3845;
+  font-size: clamp(18px, 5vw, 30px);
+  -webkit-text-stroke: 0.7px white;
+  margin: 0 0 2rem 0;
   opacity: 0;
   animation: fadeIn 1s ease 0.5s forwards;
+  font-weight: bold;
 }
 
 .view-products-btn {
   font-family: 'Kavoon', cursive;
   padding: 1rem 2rem;
   font-size: 1.2rem;
-  background-color: #ED1F2D;
+  background-color: #f0334c;
   color: white;
   border: none;
   border-radius: 30px;
@@ -132,6 +141,7 @@
 
 .view-products-btn:hover {
   transform: scale(1.05);
+  
 }
 
 .location {
@@ -141,6 +151,7 @@
   margin-top: 2rem;
   opacity: 0;
   animation: slideUp 1s ease 1.5s forwards;
+  justify-content: center;
 }
 
 .location-icon {
@@ -149,9 +160,10 @@
 }
 
 .location-text {
-  font-family: 'Kavoon', cursive;
   color: white;
   font-size: 1rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
 }
 
 .right-content {
@@ -165,8 +177,8 @@
 }
 
 .refresh-image {
-  max-width: 628px;
-  max-height: 942px;
+  max-width: 640px;
+  max-height: 950px;
   width: 100%;
   height: auto;
   object-fit: contain;
@@ -226,6 +238,7 @@
 
   .location {
     justify-content: center;
+    
   }
 
   .logo-container {
@@ -233,10 +246,11 @@
   }
 }
 
-@media (max-width: 768px) {
-  .logo-container {
-    width: 400px;
-    height: 400px;
+@media (max-width: 900px) {
+  .left-content {
+    margin-left: 0;
   }
 }
+
+
 </style>
