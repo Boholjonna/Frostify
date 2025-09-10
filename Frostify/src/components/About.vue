@@ -1,8 +1,17 @@
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const isActive = ref(false)
+
+onMounted(() => {
+  // Trigger splash/pop on initial load
+  isActive.value = true
+  // Reset after animation so button can replay it
+  setTimeout(() => {
+    isActive.value = false
+  }, 1000)
+})
 // No props needed
 </script>
 
@@ -34,8 +43,15 @@ const isActive = ref(false)
         <br>
       </div>
       <div class="right-content">
-        <img src="/about-images/refresh.png" alt="Refresh" class="refresh-image">
-      </div>
+  <div class="splash-firework" :class="{ explode: isActive }"></div>
+  <img
+    src="/about-images/refresh.png"
+    alt="Refresh"
+    class="refresh-image"
+    :class="{ pop: isActive }"
+  />
+</div>
+
     </div>
   </section>
 </template>
@@ -198,7 +214,13 @@ const isActive = ref(false)
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
+
+
+
+
+
 
 .refresh-image {
   max-width: 640px;
@@ -206,7 +228,54 @@ const isActive = ref(false)
   width: 100%;
   height: auto;
   object-fit: contain;
+  z-index: 2;
 }
+
+.splash-firework {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #fff0f5 0%, #ff69b4 40%, transparent 70%);
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0;
+  z-index: 1;
+}
+
+.splash-firework.explode {
+  animation: fireworkBurst 0.6s ease-out forwards;
+}
+
+.refresh-image.pop {
+  animation: popJump 0.8s ease-out;
+}
+
+@keyframes popJump {
+  0% { transform: scale(1) translateY(0); }
+  30% { transform: scale(1.2, 0.8) translateY(-40px); }
+  50% { transform: scale(0.9, 1.1) translateY(0); }
+  70% { transform: scale(1.05, 0.95) translateY(-20px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes fireworkBurst {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+
+
+
 
 @keyframes dropDown {
   0% {
