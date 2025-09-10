@@ -1,6 +1,13 @@
 <script setup lang="ts">
+
+import { ref } from 'vue'
+
+const isActive = ref(false)
 // No props needed
 </script>
+
+
+
 
 <template>
   <section class="about-section">
@@ -13,7 +20,13 @@
         <p class="tagline">
           Cool down and refresh with our cold and drinks, made to beat the heat and brighten your day !
         </p>
-        <button class="view-products-btn">view products</button>
+        <button
+    class="view-products-btn"
+    :class="{ active: isActive }"
+    @click="isActive = !isActive"
+  >
+    View Products
+  </button>
         <div class="location">
           <img src="/about-images/location.png" alt="Location Icon" class="location-icon">
           <p class="location-text">visit us at Hagnaya, San Remigio, Cebu (near 7-Eleven)</p>
@@ -131,6 +144,7 @@
   font-size: 1.2rem;
   background-color: #f0334c;
   color: white;
+  letter-spacing: 1px;
   border: none;
   border-radius: 30px;
   cursor: pointer;
@@ -139,10 +153,20 @@
   transition: transform 0.3s ease;
 }
 
+.view-products-btn.active {
+  background-color: #ff025a;
+}
+
 .view-products-btn:hover {
   transform: scale(1.05);
+  background-color: #f50163;
   
 }
+
+.view-products-btn:focus {
+  outline: none;
+}
+
 
 .location {
   display: flex;
