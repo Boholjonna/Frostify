@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 type IceCreamRow = {
@@ -21,6 +21,11 @@ let supabase: SupabaseClient | null = null
 const item = ref<IceCreamRow | null>(null)
 const loading = ref(true)
 const errorMessage = ref('')
+
+// in-view detection
+const rootRef = ref<HTMLElement | null>(null)
+const inView = ref(false)
+let observer: IntersectionObserver | null = null
 
 onMounted(async () => {
 	try {
@@ -47,6 +52,33 @@ onMounted(async () => {
 	} finally {
 		loading.value = false
 	}
+
+	// set up intersection observer to trigger animations on view
+	observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					inView.value = true // trigger once
+					if (observer && rootRef.value) observer.unobserve(rootRef.value)
+				}
+			})
+		},
+		{ threshold: 0.35 }
+	)
+	if (rootRef.value) observer.observe(rootRef.value)
+
+	// listen for explicit trigger from About button
+	const trigger = () => { inView.value = false; requestAnimationFrame(() => inView.value = true) }
+	window.addEventListener('trigger-icecream-anim', trigger)
+	// store off handler for cleanup
+	;(window as any).__icecreamTrigger__ = trigger
+})
+
+onBeforeUnmount(() => {
+	if (observer && rootRef.value) observer.unobserve(rootRef.value)
+	observer = null
+	const trigger = (window as any).__icecreamTrigger__
+	if (trigger) window.removeEventListener('trigger-icecream-anim', trigger)
 })
 
 const containerStyle = computed(() => {
@@ -75,7 +107,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 </script>
 
 <template>
-	<section id="icecream-section" class="icecream-root" :style="containerStyle">
+	<section ref="rootRef" id="icecream-section" class="icecream-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="icecream-wrap">
 			<header class="nav-wrap fade-down" :style="headerStyles">
 				<nav class="nav">
@@ -114,7 +146,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 		<!-- Centered overlay image at 90% viewport height -->
 		<div v-if="overlayVisible" class="image-overlay">
-			<img class="overlay-img rotate-rise" :src="overlaySrc" alt="ice cream" />
+			<img class="overlay-img" :class="[inView ? 'rotate-rise' : '']" :src="overlaySrc" alt="ice cream" />
 		</div>
 	</section>
 </template>
@@ -236,12 +268,14 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 }
 
 /* Rise from left (-90deg) to upright (0deg) */
-.rotate-rise { animation: riseUpright 900ms cubic-bezier(.2,.7,.3,1) both; }
 @keyframes riseUpright {
 	0% { transform: rotate(-90deg); opacity: 0; }
 	60% { transform: rotate(8deg); opacity: 1; }
 	100% { transform: rotate(0deg); }
 }
+
+/* Trigger animations only when in view */
+.animate .rotate-rise { animation: riseUpright 900ms cubic-bezier(.2,.7,.3,1) both; }
 
 .flavor-row {
 	width: 100%;
@@ -309,9 +343,10 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	100% { transform: translateY(0); }
 }
 
-.fade-up { animation: fadeUp .6s ease both; animation-delay: .15s; }
-.fade-down { animation: fadeDown .6s ease both; }
-.pop-in { animation: popIn .7s cubic-bezier(.2,.7,.3,1) both; animation-delay: .2s; }
-.drop-down { animation: dropDown .7s ease both; animation-delay: .1s; }
+/* Only animate when parent gets 'animate' */
+.animate .fade-up { animation: fadeUp .6s ease both; animation-delay: .15s; }
+.animate .fade-down { animation: fadeDown .6s ease both; }
+.animate .pop-in { animation: popIn .7s cubic-bezier(.2,.7,.3,1) both; animation-delay: .2s; }
+.animate .drop-down { animation: dropDown .7s ease both; animation-delay: .1s; }
 </style>
 

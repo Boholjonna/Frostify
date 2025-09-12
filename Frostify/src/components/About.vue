@@ -7,6 +7,10 @@ const isActive = ref(false)
 const scrollToProducts = () => {
   const el = document.getElementById('icecream-section')
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  // Explicitly tell Icecream to animate
+  window.dispatchEvent(new CustomEvent('trigger-icecream-anim'))
+  // Fire again after the smooth scroll to be safe
+  setTimeout(() => window.dispatchEvent(new CustomEvent('trigger-icecream-anim')), 600)
 }
 
 onMounted(() => {
