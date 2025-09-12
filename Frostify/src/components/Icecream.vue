@@ -69,6 +69,9 @@ const navItemStyle = (label: string) => {
 		color: isActive ? priceBg.value : textColor.value
 	}
 }
+
+const overlayVisible = computed<boolean>(() => Boolean(item.value && item.value.image))
+const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image : ''))
 </script>
 
 <template>
@@ -95,10 +98,9 @@ const navItemStyle = (label: string) => {
 				</div>
 			</div>
 
+			<!-- Keep the stage for layout but hide its image -->
 			<div class="image-stage pop-in">
-				<div class="image-frame">
-					<img v-if="item?.image" class="icecream-img rotate-rise" :src="item.image" alt="ice cream" />
-				</div>
+				<div class="image-frame image-frame--hidden"></div>
 			</div>
 
 			<div class="flavor-row fade-up">
@@ -109,6 +111,11 @@ const navItemStyle = (label: string) => {
 			<div v-if="loading" class="status">Loading…</div>
 			<div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
 		</div>
+
+		<!-- Centered overlay image at 90% viewport height -->
+		<div v-if="overlayVisible" class="image-overlay">
+			<img class="overlay-img rotate-rise" :src="overlaySrc" alt="ice cream" />
+		</div>
 	</section>
 </template>
 
@@ -117,6 +124,7 @@ const navItemStyle = (label: string) => {
 
 /* Layout */
 .icecream-root {
+	position: relative; /* anchor overlay */
 	width: 100vw;
 	height: 100vh;
 	display: flex;
@@ -186,7 +194,7 @@ const navItemStyle = (label: string) => {
 	font-weight: 600;
 }
 
-/* Image stage allowing overlay */
+/* Image stage placeholder (hidden image) */
 .image-stage {
 	width: 100%;
 	flex: 1 1 auto; /* take the remaining vertical space */
@@ -206,25 +214,33 @@ const navItemStyle = (label: string) => {
 	overflow: visible; /* allow overlay inside stage, but root hides overflow */
 }
 
-.icecream-img {
+.image-frame--hidden { display: none; }
+
+/* Overlay image centered in front of everything */
+.image-overlay {
 	position: absolute;
-	top: -5%;
-	bottom: -5%;
-	left: 50%;
-	transform: translateX(-50%);
-	transform-origin: 50% 90%; /* pivot near cone tip */
-	height: 110%; /* ensure it covers top and bottom of the frame */
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 5;
+}
+
+.overlay-img {
+	height: 90vh; /* 90% of viewport height */
 	width: auto;
-	max-width: none;
+	max-width: 92vw;
+	transform-origin: 50% 90%;
 	filter: drop-shadow(0 18px 30px rgba(0,0,0,0.15));
 }
 
 /* Rise from left (-90deg) to upright (0deg) */
 .rotate-rise { animation: riseUpright 900ms cubic-bezier(.2,.7,.3,1) both; }
 @keyframes riseUpright {
-	0% { transform: translateX(-50%) rotate(-90deg); opacity: 0; }
-	60% { transform: translateX(-50%) rotate(8deg); opacity: 1; }
-	100% { transform: translateX(-50%) rotate(0deg); }
+	0% { transform: rotate(-90deg); opacity: 0; }
+	60% { transform: rotate(8deg); opacity: 1; }
+	100% { transform: rotate(0deg); }
 }
 
 .flavor-row {
