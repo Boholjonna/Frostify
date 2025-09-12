@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import About from './components/About.vue'
+import Icecream from './components/Icecream.vue'
 </script>
 
 <template>
   <main class="app-main">
     <About />
+    <Icecream />
   </main>
 </template>
 
@@ -13,6 +15,10 @@ import About from './components/About.vue'
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 #app {
@@ -27,6 +33,7 @@ import About from './components/About.vue'
   padding: 0;
   height: auto;
   width: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 </style>

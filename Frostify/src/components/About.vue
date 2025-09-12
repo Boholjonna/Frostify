@@ -4,6 +4,11 @@ import { ref, onMounted } from 'vue'
 
 const isActive = ref(false)
 
+const scrollToProducts = () => {
+  const el = document.getElementById('icecream-section')
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 onMounted(() => {
   // Trigger splash/pop on initial load
   isActive.value = true
@@ -32,7 +37,7 @@ onMounted(() => {
         <button
     class="view-products-btn"
     :class="{ active: isActive }"
-    @click="isActive = !isActive"
+    @click="scrollToProducts()"
   >
     View Products
   </button>
@@ -62,7 +67,8 @@ onMounted(() => {
 
 .about-section {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
   margin: 0;
   padding: 0;
   background-image: url('/about-images/bg.png');
@@ -70,7 +76,7 @@ onMounted(() => {
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .about-content {
@@ -210,13 +216,12 @@ onMounted(() => {
   flex: 1;
   min-width: 300px;
   max-width: 942px;
-  height: 100%;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
-
 
 
 
