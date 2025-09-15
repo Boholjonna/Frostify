@@ -146,23 +146,24 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 .icecream-wrap {
 	width: 100%;
-	height: 100vh; /* strictly the viewport height */
+	height: 100vh;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: flex-start;
-	gap: 0; /* Remove gap to control spacing manually */
-	padding: 0 16px 16px; /* Reduced top padding to 0, kept bottom padding */
+	justify-content: center;
+	gap: 20px;
+	padding: 20px 16px;
 	box-sizing: border-box;
+	margin-top: -40px; /* Pull content up slightly */
 }
 
 
 .prices {
 	display: flex;
-	gap: 20px; /* Reduced gap */
+	gap: 20px;
 	align-items: center;
 	justify-content: center;
-	margin: 0 0 20px; /* Reduced bottom margin */
+	margin: 0;
 	flex: 0 0 auto;
 	position: relative;
 	z-index: 2;
@@ -188,16 +189,18 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	width: 100%;
 	display: flex;
 	justify-content: center;
-	align-items: flex-start; /* Align to top */
-	padding: 0 0 10px; /* Reduced padding */
+	align-items: center;
+	flex: 1;
+	padding: 0;
 }
 
 .main-image {
-	max-width: 100%;
+	max-width: 80%; /* Reduced by 20% */
 	height: auto;
-	max-height: 75vh; /* Increased from 50vh to 75vh (50% larger) */
+	max-height: 60vh; /* Reduced by 20% from 75vh */
 	object-fit: contain;
 	transform-origin: center bottom;
+	margin-top: 50px;
 }
 
 .image-frame {
