@@ -13,6 +13,16 @@ const rootRef = ref<HTMLElement | null>(null)
 const inView = ref(false)
 let observer: IntersectionObserver | null = null
 
+// Method to trigger animation
+defineExpose({
+  triggerAnimation: () => {
+    inView.value = false
+    requestAnimationFrame(() => {
+      inView.value = true
+    })
+  }
+})
+
 // Event handlers for Getdata component
 const handleDataLoaded = (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
@@ -44,19 +54,11 @@ onMounted(() => {
 		{ threshold: 0.35 }
 	)
 	if (rootRef.value) observer.observe(rootRef.value)
-
-	// listen for explicit trigger from About button
-	const trigger = () => { inView.value = false; requestAnimationFrame(() => inView.value = true) }
-	window.addEventListener('trigger-icecream-anim', trigger)
-	// store off handler for cleanup
-	;(window as any).__icecreamTrigger__ = trigger
 })
 
 onBeforeUnmount(() => {
 	if (observer && rootRef.value) observer.unobserve(rootRef.value)
 	observer = null
-	const trigger = (window as any).__icecreamTrigger__
-	if (trigger) window.removeEventListener('trigger-icecream-anim', trigger)
 })
 
 const containerStyle = computed(() => {

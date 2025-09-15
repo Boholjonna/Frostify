@@ -4,13 +4,20 @@ import { ref, onMounted } from 'vue'
 
 const isActive = ref(false)
 
+import { inject } from 'vue'
+
+const triggerIceCreamAnimation = inject<() => void>('triggerIceCreamAnimation')
+
 const scrollToProducts = () => {
+  // Trigger animation immediately
+  if (triggerIceCreamAnimation) {
+    triggerIceCreamAnimation()
+  }
+  // Then start scrolling
   const el = document.getElementById('icecream-section')
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  // Explicitly tell Icecream to animate
-  window.dispatchEvent(new CustomEvent('trigger-icecream-anim'))
-  // Fire again after the smooth scroll to be safe
-  setTimeout(() => window.dispatchEvent(new CustomEvent('trigger-icecream-anim')), 600)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 onMounted(() => {

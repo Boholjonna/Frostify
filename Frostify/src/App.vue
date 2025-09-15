@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import About from './components/About.vue'
 import Icecream from './components/Icecream.vue'
 import Milktea from './components/Milktea.vue'
@@ -11,6 +11,16 @@ import StickyHeader from './components/StickyHeader.vue'
 const currentSection = ref('ice cream')
 const priceBgColor = ref('#000')
 const textColor = ref('#333')
+const icecreamRef = ref<{ triggerAnimation: () => void } | null>(null)
+
+// Provide a method to trigger the animation
+const triggerIceCreamAnimation = () => {
+  if (icecreamRef.value) {
+    icecreamRef.value.triggerAnimation()
+  }
+}
+
+provide('triggerIceCreamAnimation', triggerIceCreamAnimation)
 
 // Navigation handler
 const handleNavigation = (section: string) => {
@@ -30,10 +40,8 @@ const handleNavigation = (section: string) => {
     
     <!-- Sections -->
     <About />
-    <Icecream />
-    <Milktea />
-    <Float />
-    <Juice />
+    <Icecream ref="icecreamRef" />
+    
   </main>
 </template>
 
