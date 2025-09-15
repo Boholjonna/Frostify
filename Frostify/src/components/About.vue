@@ -28,7 +28,7 @@ onMounted(() => {
 
 
 <template>
-  <section class="about-section">
+  <section id="about-section" class="about-section">
     <div class="about-content">
       <div class="left-content">
         <h1 class="here-in">Here in</h1>

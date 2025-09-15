@@ -69,16 +69,6 @@ const containerStyle = computed(() => {
 const priceBg = computed(() => item.value?.['price-bgcolor'] || '#000')
 const textColor = computed(() => item.value?.['text-color'] || '#333')
 
-const headerStyles = computed(() => ({
-	borderBottom: `4px solid ${priceBg.value}`
-}))
-
-const navItemStyle = (label: string) => {
-	const isActive = label.toLowerCase() === 'milk tea'
-	return {
-		color: isActive ? priceBg.value : textColor.value
-	}
-}
 
 const overlayVisible = computed<boolean>(() => Boolean(item.value && item.value.image))
 const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image : ''))
@@ -97,16 +87,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	
 	<section ref="rootRef" id="milktea-section" class="milktea-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="milktea-wrap">
-			<header class="nav-wrap fade-down" :style="headerStyles">
-				<nav class="nav">
-					<span class="nav-item" :style="navItemStyle('ice cream')">ice cream</span>
-					<span class="nav-item" :style="navItemStyle('milk tea')">milk tea</span>
-					<span class="nav-item" :style="navItemStyle('float')">float</span>
-					<span class="nav-item" :style="navItemStyle('juice')">juice</span>
-				</nav>
-			</header>
-
-			<div class="prices drop-down">
+			<div class="prices drop-down" style="margin-top: clamp(50px, 8vw, 60px);">
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
 				</div>
@@ -166,29 +147,6 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	box-sizing: border-box;
 }
 
-.nav-wrap {
-	background: transparent;
-	width: 100%;
-	max-width: 700px;
-	min-width: 360px;
-	height: 50px;
-	border-radius: 15px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: 0 0 50px; /* fixed height */
-}
-
-.nav {
-	display: flex;
-	gap: 28px;
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	font-size: 18px;
-}
-
-.nav-item {
-	text-transform: lowercase;
-}
 
 .prices {
 	display: flex;
