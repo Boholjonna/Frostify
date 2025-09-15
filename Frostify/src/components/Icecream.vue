@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, inject, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 
 type IceCreamRow = DatabaseRow
@@ -13,13 +13,24 @@ const rootRef = ref<HTMLElement | null>(null)
 const inView = ref(false)
 let observer: IntersectionObserver | null = null
 
-// Method to trigger animation
+// Expose methods and properties
 defineExpose({
   triggerAnimation: () => {
     inView.value = false
     requestAnimationFrame(() => {
       inView.value = true
     })
+  },
+  priceBg: computed(() => item.value?.['price-bgcolor'] || '#000'),
+  textColor: computed(() => item.value?.['text-color'] || '#333')
+})
+
+const updateSectionColors = inject<(section: string) => void>('updateSectionColors')
+
+// Update colors when this section comes into view
+watch(inView, (newVal: boolean) => {
+  if (newVal && updateSectionColors) {
+    updateSectionColors('ice cream')
   }
 })
 

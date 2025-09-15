@@ -11,7 +11,30 @@ import StickyHeader from './components/StickyHeader.vue'
 const currentSection = ref('ice cream')
 const priceBgColor = ref('#000')
 const textColor = ref('#333')
-const icecreamRef = ref<{ triggerAnimation: () => void } | null>(null)
+const icecreamRef = ref<{ 
+  triggerAnimation: () => void,
+  priceBg: string,
+  textColor: string 
+} | null>(null)
+
+// Update section colors when section changes
+const updateSectionColors = (section: string) => {
+  currentSection.value = section
+  
+  // Default colors
+  let newPriceBg = '#000'
+  let newTextColor = '#333'
+  
+  // Get colors from the active section component
+  if (section === 'ice cream' && icecreamRef.value) {
+    newPriceBg = icecreamRef.value.priceBg
+    newTextColor = icecreamRef.value.textColor
+  }
+  // Add other sections here when implemented
+  
+  priceBgColor.value = newPriceBg
+  textColor.value = newTextColor
+}
 
 // Provide a method to trigger the animation
 const triggerIceCreamAnimation = () => {
@@ -21,6 +44,7 @@ const triggerIceCreamAnimation = () => {
 }
 
 provide('triggerIceCreamAnimation', triggerIceCreamAnimation)
+provide('updateSectionColors', updateSectionColors)
 
 // Navigation handler
 const handleNavigation = (section: string) => {

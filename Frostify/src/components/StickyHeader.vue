@@ -25,13 +25,17 @@ const headerRef = ref<HTMLElement | null>(null)
 
 // Computed styles
 const headerStyles = computed(() => ({
-  borderBottom: `4px solid ${props.priceBgColor}`
+  borderBottom: `4px solid ${props.priceBgColor}`,
+  '--active-color': props.priceBgColor,
+  '--inactive-color': props.textColor
 }))
 
 const navItemStyle = (label: string) => {
   const isActive = label.toLowerCase() === props.currentSection.toLowerCase()
   return {
-    color: isActive ? props.priceBgColor : props.textColor
+    color: isActive ? props.priceBgColor : props.textColor,
+    '--active-color': props.priceBgColor,
+    '--inactive-color': props.textColor
   }
 }
 
