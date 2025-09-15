@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import About from './components/About.vue'
 import Icecream from './components/Icecream.vue'
+import Milktea from './components/Milktea.vue'
 </script>
 
 <template>
   <main class="app-main">
     <About />
     <Icecream />
+    <Milktea />
   </main>
 </template>
 

@@ -2,9 +2,9 @@
 import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 
-type IceCreamRow = DatabaseRow
+type MilkteaRow = DatabaseRow
 
-const item = ref<IceCreamRow | null>(null)
+const item = ref<MilkteaRow | null>(null)
 const loading = ref(true)
 const errorMessage = ref('')
 
@@ -16,9 +16,9 @@ let observer: IntersectionObserver | null = null
 // Event handlers for Getdata component
 const handleDataLoaded = (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
-		item.value = data[0] as IceCreamRow
+		item.value = data[0] as MilkteaRow
 	} else {
-		errorMessage.value = 'No ice-cream rows returned. Check table data and RLS policies.'
+		errorMessage.value = 'No milk tea rows returned. Check table data and RLS policies.'
 	}
 }
 
@@ -47,16 +47,16 @@ onMounted(() => {
 
 	// listen for explicit trigger from About button
 	const trigger = () => { inView.value = false; requestAnimationFrame(() => inView.value = true) }
-	window.addEventListener('trigger-icecream-anim', trigger)
+	window.addEventListener('trigger-milktea-anim', trigger)
 	// store off handler for cleanup
-	;(window as any).__icecreamTrigger__ = trigger
+	;(window as any).__milkteaTrigger__ = trigger
 })
 
 onBeforeUnmount(() => {
 	if (observer && rootRef.value) observer.unobserve(rootRef.value)
 	observer = null
-	const trigger = (window as any).__icecreamTrigger__
-	if (trigger) window.removeEventListener('trigger-icecream-anim', trigger)
+	const trigger = (window as any).__milkteaTrigger__
+	if (trigger) window.removeEventListener('trigger-milktea-anim', trigger)
 })
 
 const containerStyle = computed(() => {
@@ -74,7 +74,7 @@ const headerStyles = computed(() => ({
 }))
 
 const navItemStyle = (label: string) => {
-	const isActive = label.toLowerCase() === 'ice cream'
+	const isActive = label.toLowerCase() === 'milk tea'
 	return {
 		color: isActive ? priceBg.value : textColor.value
 	}
@@ -87,7 +87,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 <template>
 	<!-- Data fetching component -->
 	<Getdata 
-		table-name="ice-cream" 
+		table-name="milk-tea" 
 		:columns="'*'" 
 		:limit="1"
 		@data-loaded="handleDataLoaded"
@@ -95,8 +95,8 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 		@loading="handleLoading"
 	/>
 	
-	<section ref="rootRef" id="icecream-section" class="icecream-root" :class="{ animate: inView }" :style="containerStyle">
-		<div class="icecream-wrap">
+	<section ref="rootRef" id="milktea-section" class="milktea-root" :class="{ animate: inView }" :style="containerStyle">
+		<div class="milktea-wrap">
 			<header class="nav-wrap fade-down" :style="headerStyles">
 				<nav class="nav">
 					<span class="nav-item" :style="navItemStyle('ice cream')">ice cream</span>
@@ -134,7 +134,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 		<!-- Centered overlay image at 90% viewport height -->
 		<div v-if="overlayVisible" class="image-overlay">
-			<img class="overlay-img" :class="[inView ? 'rotate-rise' : '']" :src="overlaySrc" alt="ice cream" />
+			<img class="overlay-img" :class="[inView ? 'rotate-rise' : '']" :src="overlaySrc" alt="milk tea" />
 		</div>
 	</section>
 </template>
@@ -143,7 +143,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kavoon&display=swap');
 
 /* Layout */
-.icecream-root {
+.milktea-root {
 	position: relative; /* anchor overlay */
 	width: 100vw;
 	height: 100vh;
@@ -154,7 +154,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	overflow: hidden; /* keep everything inside the viewport */
 }
 
-.icecream-wrap {
+.milktea-wrap {
 	width: 100%;
 	height: 100vh; /* strictly the viewport height */
 	display: flex;
@@ -337,4 +337,3 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 .animate .pop-in { animation: popIn .7s cubic-bezier(.2,.7,.3,1) both; animation-delay: .2s; }
 .animate .drop-down { animation: dropDown .7s ease both; animation-delay: .1s; }
 </style>
-
