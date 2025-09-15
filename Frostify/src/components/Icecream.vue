@@ -4,9 +4,23 @@ import Getdata, { type DatabaseRow } from './Getdata.vue'
 
 type IceCreamRow = DatabaseRow
 
-const item = ref<IceCreamRow | null>(null)
+const items = ref<IceCreamRow[]>([])
+const currentIndex = ref(0)
 const loading = ref(true)
 const errorMessage = ref('')
+
+// Computed property for current item
+const item = computed(() => items.value[currentIndex.value] || null)
+
+// Next item function
+const nextItem = () => {
+  if (items.value.length <= 1) return
+  currentIndex.value = (currentIndex.value + 1) % items.value.length
+  inView.value = false
+  requestAnimationFrame(() => {
+    inView.value = true
+  })
+}
 
 // in-view detection
 const rootRef = ref<HTMLElement | null>(null)
@@ -37,7 +51,8 @@ watch(inView, (newVal: boolean) => {
 // Event handlers for Getdata component
 const handleDataLoaded = (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
-		item.value = data[0] as IceCreamRow
+		items.value = data as IceCreamRow[]
+		currentIndex.value = 0
 	} else {
 		errorMessage.value = 'No ice-cream rows returned. Check table data and RLS policies.'
 	}
@@ -92,7 +107,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	<Getdata 
 		table-name="ice-cream" 
 		:columns="'*'" 
-		:limit="1"
+		:limit="10"
 		@data-loaded="handleDataLoaded"
 		@error="handleError"
 		@loading="handleLoading"
@@ -120,7 +135,14 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 			<div class="flavor-row fade-up">
 				<h1 class="flavor" :style="{ color: textColor }">{{ item?.flavor }}</h1>
-				<button class="next-btn">next flavor</button>
+				<button 
+  class="next-btn" 
+  @click="nextItem"
+  :disabled="items.length <= 1" 
+  :class="{ 'disabled': items.length <= 1 }"
+>
+  next flavor
+</button>
 			</div>
 
 			<div v-if="loading" class="status">Loading…</div>
@@ -268,12 +290,24 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	padding: 10px 18px;
 	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 	box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
-	transition: transform .25s ease, box-shadow .25s ease;
+	transition: all 0.3s ease;
+	cursor: pointer;
 }
 
-.next-btn:hover {
+.next-btn:not(.disabled):hover {
 	transform: translateY(-2px);
-	box-shadow: 0 7px 10px rgba(0,0,0,0.12);
+	box-shadow: 0 7px 12px rgba(0,0,0,0.15);
+	background-color: #f8f8f8;
+}
+
+.next-btn:not(.disabled):active {
+	transform: translateY(1px);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.next-btn.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .status {
