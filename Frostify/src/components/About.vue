@@ -8,15 +8,28 @@ import { inject } from 'vue'
 
 const triggerIceCreamAnimation = inject<() => void>('triggerIceCreamAnimation')
 
+// Get the navigation function from the parent
+const navigate = inject<(section: string) => void>('navigate')
+
 const scrollToProducts = () => {
   // Trigger animation immediately
   if (triggerIceCreamAnimation) {
     triggerIceCreamAnimation()
   }
-  // Then start scrolling
-  const el = document.getElementById('icecream-section')
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  
+  // Use the navigation system to handle the scroll
+  if (navigate) {
+    navigate('ice cream')
+  } else {
+    // Fallback in case navigation injection fails
+    const target = document.getElementById('icecream-section')
+    if (target) {
+      // Temporarily disable scroll handling to prevent header flicker
+      window.scrollTo({
+        top: target.offsetTop,
+        behavior: 'smooth'
+      })
+    }
   }
 }
 

@@ -87,7 +87,13 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	
 	<section ref="rootRef" id="juice-section" class="juice-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="juice-wrap">
-			<div class="prices drop-down" style="margin-top: clamp(50px, 8vw, 60px);">
+			<!-- Main image from database with animation -->
+			<div v-if="overlayVisible" class="main-image-container">
+				<img :src="overlaySrc" alt="juice" class="main-image" :class="{ 'rotate-rise': inView }" />
+			</div>
+
+			<!-- Prices section -->
+			<div class="prices drop-down">
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
 				</div>
@@ -142,19 +148,21 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 14px; /* slightly tighter to avoid overflow */
-	padding: 16px 16px 16px; /* reduce bottom padding to fit */
+	gap: 0; /* Remove gap to control spacing manually */
+	padding: 0 16px 16px; /* Reduced top padding to 0, kept bottom padding */
 	box-sizing: border-box;
 }
 
 
 .prices {
 	display: flex;
-	gap: 28px;
+	gap: 20px; /* Reduced gap */
 	align-items: center;
 	justify-content: center;
-	margin-top: 2px;
-	flex: 0 0 56px; /* reserve space so section won't overflow */
+	margin: 0 0 20px; /* Reduced bottom margin */
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 2;
 }
 
 .price-circle {
@@ -172,15 +180,21 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	font-weight: 600;
 }
 
-/* Image stage placeholder (hidden image) */
-.image-stage {
+/* Main image container */
+.main-image-container {
 	width: 100%;
-	flex: 1 1 auto; /* take the remaining vertical space */
-	min-height: 0; /* allow flexbox to shrink if needed */
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	pointer-events: none;
+	align-items: flex-start; /* Align to top */
+	padding: 0 0 10px; /* Reduced padding */
+}
+
+.main-image {
+	max-width: 100%;
+	height: auto;
+	max-height: 75vh; /* Increased from 50vh to 75vh (50% larger) */
+	object-fit: contain;
+	transform-origin: center bottom;
 }
 
 .image-frame {

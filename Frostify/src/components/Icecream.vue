@@ -100,7 +100,13 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	
 	<section ref="rootRef" id="icecream-section" class="icecream-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="icecream-wrap">
-			<div class="prices drop-down" style="margin-top: clamp(50px, 8vw, 60px);">
+			<!-- Main image from database with animation -->
+			<div v-if="overlayVisible" class="main-image-container">
+				<img :src="overlaySrc" alt="ice cream" class="main-image" :class="{ 'rotate-rise': inView }" />
+			</div>
+
+			<!-- Prices section -->
+			<div class="prices drop-down">
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
 				</div>
@@ -112,11 +118,6 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 				</div>
 			</div>
 
-			<!-- Keep the stage for layout but hide its image -->
-			<div class="image-stage pop-in">
-				<div class="image-frame image-frame--hidden"></div>
-			</div>
-
 			<div class="flavor-row fade-up">
 				<h1 class="flavor" :style="{ color: textColor }">{{ item?.flavor }}</h1>
 				<button class="next-btn">next flavor</button>
@@ -124,11 +125,6 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 			<div v-if="loading" class="status">Loading…</div>
 			<div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
-		</div>
-
-		<!-- Centered overlay image at 90% viewport height -->
-		<div v-if="overlayVisible" class="image-overlay">
-			<img class="overlay-img" :class="[inView ? 'rotate-rise' : '']" :src="overlaySrc" alt="ice cream" />
 		</div>
 	</section>
 </template>
@@ -155,19 +151,21 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 14px; /* slightly tighter to avoid overflow */
-	padding: 16px 16px 16px; /* reduce bottom padding to fit */
+	gap: 0; /* Remove gap to control spacing manually */
+	padding: 0 16px 16px; /* Reduced top padding to 0, kept bottom padding */
 	box-sizing: border-box;
 }
 
 
 .prices {
 	display: flex;
-	gap: 28px;
+	gap: 20px; /* Reduced gap */
 	align-items: center;
 	justify-content: center;
-	margin-top: 2px;
-	flex: 0 0 56px; /* reserve space so section won't overflow */
+	margin: 0 0 20px; /* Reduced bottom margin */
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 2;
 }
 
 .price-circle {
@@ -185,15 +183,21 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	font-weight: 600;
 }
 
-/* Image stage placeholder (hidden image) */
-.image-stage {
+/* Main image container */
+.main-image-container {
 	width: 100%;
-	flex: 1 1 auto; /* take the remaining vertical space */
-	min-height: 0; /* allow flexbox to shrink if needed */
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	pointer-events: none;
+	align-items: flex-start; /* Align to top */
+	padding: 0 0 10px; /* Reduced padding */
+}
+
+.main-image {
+	max-width: 100%;
+	height: auto;
+	max-height: 75vh; /* Increased from 50vh to 75vh (50% larger) */
+	object-fit: contain;
+	transform-origin: center bottom;
 }
 
 .image-frame {

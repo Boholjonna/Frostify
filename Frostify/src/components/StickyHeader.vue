@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 
 // Props for the component
 interface Props {
@@ -19,13 +19,14 @@ const emit = defineEmits<{
   navigate: [section: string]
 }>()
 
-// Reactive state
-const isVisible = ref(true) // Start visible by default
+// Refs
 const headerRef = ref<HTMLElement | null>(null)
+
+// Computed to check if we're on the about section
+const isAboutSection = computed(() => props.currentSection.toLowerCase() === 'about')
 
 // Computed styles
 const headerStyles = computed(() => ({
-  borderBottom: `4px solid ${props.priceBgColor}`,
   '--active-color': props.priceBgColor,
   '--inactive-color': props.textColor
 }))
@@ -35,7 +36,11 @@ const navItemStyle = (label: string) => {
   return {
     color: isActive ? props.priceBgColor : props.textColor,
     '--active-color': props.priceBgColor,
-    '--inactive-color': props.textColor
+    '--inactive-color': props.textColor,
+    'font-weight': isActive ? 'bold' : 'normal',
+    'border-bottom': isActive ? `2px solid ${props.priceBgColor}` : '2px solid transparent',
+    'padding-bottom': '4px',
+    'transition': 'all 0.2s ease'
   }
 }
 
@@ -56,114 +61,16 @@ const handleNavigation = (section: string) => {
   if (sectionId) {
     const element = document.getElementById(sectionId)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 }
-
-// Intersection observer to show/hide header and track current section
-let observer: IntersectionObserver | null = null
-
-onMounted(() => {
-  // Set up intersection observer to track current section and show/hide header
-  observer = new IntersectionObserver(
-    (entries) => {
-      let currentSectionInView = ''
-      let aboutSectionInView = false
-      let anyProductSectionInView = false
-      
-      entries.forEach((entry) => {
-        const sectionId = entry.target.id
-        
-        if (entry.isIntersecting) {
-          // Check if About section is in view
-          if (sectionId.includes('about')) {
-            aboutSectionInView = true
-          }
-          // Check product sections
-          else if (sectionId.includes('icecream')) {
-            currentSectionInView = 'ice cream'
-            anyProductSectionInView = true
-          }
-          else if (sectionId.includes('milktea')) {
-            currentSectionInView = 'milk tea'
-            anyProductSectionInView = true
-          }
-          else if (sectionId.includes('float')) {
-            currentSectionInView = 'float'
-            anyProductSectionInView = true
-          }
-          else if (sectionId.includes('juice')) {
-            currentSectionInView = 'juice'
-            anyProductSectionInView = true
-          }
-        }
-      })
-      
-      // Show header by default, hide only when About section is in view
-      isVisible.value = !aboutSectionInView
-      
-      if (currentSectionInView) {
-        emit('navigate', currentSectionInView)
-      }
-    },
-    { 
-      threshold: 0.1,
-      rootMargin: '-50px 0px 0px 0px'
-    }
-  )
-
-  // Observe all sections including About
-  const allSections = document.querySelectorAll('#about-section, #icecream-section, #milktea-section, #float-section, #juice-section')
-  allSections.forEach(section => {
-    if (observer) observer.observe(section)
-  })
-  
-  // Add scroll listener as backup to ensure header stays visible
-  const handleScroll = () => {
-    const aboutSection = document.getElementById('about-section')
-    if (aboutSection) {
-      const rect = aboutSection.getBoundingClientRect()
-      const isAboutInView = rect.top < window.innerHeight && rect.bottom > 0
-      
-      if (isAboutInView) {
-        isVisible.value = false
-      } else {
-        isVisible.value = true
-      }
-    }
-  }
-  
-  window.addEventListener('scroll', handleScroll)
-  
-  // Store cleanup function
-  const cleanupScroll = () => {
-    window.removeEventListener('scroll', handleScroll)
-  }
-  
-  // Store cleanup for later use
-  ;(window as any).__stickyHeaderCleanup__ = cleanupScroll
-})
-
-onBeforeUnmount(() => {
-  if (observer) {
-    observer.disconnect()
-    observer = null
-  }
-  
-  // Cleanup scroll listener
-  const cleanupScroll = (window as any).__stickyHeaderCleanup__
-  if (cleanupScroll) {
-    cleanupScroll()
-    delete (window as any).__stickyHeaderCleanup__
-  }
-})
 </script>
 
 <template>
   <header 
     ref="headerRef"
-    v-show="isVisible"
+    v-show="!isAboutSection"
     class="sticky-header"
     :style="headerStyles"
   >
@@ -202,25 +109,35 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .sticky-header {
-  position: fixed !important;
-  top: 0 !important;
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   width: 100%;
-  max-width: 700px;
-  min-width: 300px;
-  height: clamp(50px, 8vw, 60px);
-  border-radius: 0 0 15px 15px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease, transform 0.3s ease;
+  transform: translateY(0);
+  padding: 0 20px;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.sticky-header.v-leave-active,
+.sticky-header.v-enter-active {
+  transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+.sticky-header.v-leave-to,
+.sticky-header.v-enter-from {
+  opacity: 0;
+  transform: translateY(-100%);
 }
 
 .nav {
@@ -257,21 +174,44 @@ onBeforeUnmount(() => {
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  /* Ensure header stays above all other content */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
-/* Responsive adjustments for very small screens */
-@media (max-width: 480px) {
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .sticky-header {
+    height: 50px;
+    padding: 0 15px;
+  }
+  
   .nav {
-    gap: 12px;
+    width: 100%;
+    justify-content: space-around;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .nav-item {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .sticky-header {
+    height: 45px;
+  }
+  
+  .nav {
     font-size: 12px;
   }
   
   .nav-item {
     padding: 4px 8px;
-  }
-  
-  .sticky-header {
-    height: 45px;
+    font-size: 12px;
   }
 }
 </style>

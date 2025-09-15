@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide } from 'vue'
+import { ref, provide, onMounted, onBeforeUnmount } from 'vue'
 import About from './components/About.vue'
 import Icecream from './components/Icecream.vue'
 import Milktea from './components/Milktea.vue'
@@ -43,13 +43,112 @@ const triggerIceCreamAnimation = () => {
   }
 }
 
-provide('triggerIceCreamAnimation', triggerIceCreamAnimation)
-provide('updateSectionColors', updateSectionColors)
+// Track if we're currently scrolling programmatically
+const isScrolling = ref(false)
 
 // Navigation handler
 const handleNavigation = (section: string) => {
+  // Update section immediately
   currentSection.value = section
+  updateSectionColors(section)
+  
+  // Only scroll if not already at the target section
+  const targetId = `${section === 'ice cream' ? 'icecream' : section === 'milk tea' ? 'milktea' : section}-section`
+  const targetElement = document.getElementById(targetId)
+  
+  if (targetElement) {
+    isScrolling.value = true
+    window.scrollTo({
+      top: targetElement.offsetTop,
+      behavior: 'smooth'
+    })
+    
+    // Reset scrolling state after animation completes
+    setTimeout(() => {
+      isScrolling.value = false
+    }, 1000)
+  }
 }
+
+// Provide methods to child components
+provide('triggerIceCreamAnimation', triggerIceCreamAnimation)
+provide('updateSectionColors', updateSectionColors)
+provide('navigate', handleNavigation)
+
+// Handle scroll to detect current section
+const handleScroll = () => {
+  // Skip scroll handling if we're in the middle of a programmatic scroll
+  if (isScrolling.value) return
+  
+  const aboutSection = document.getElementById('about-section')
+  const sections = ['icecream', 'milktea', 'float', 'juice']
+  const scrollPosition = window.scrollY + 20 // Reduced offset for more accurate detection
+  
+  // First check if we're in the about section
+  if (aboutSection) {
+    const aboutRect = aboutSection.getBoundingClientRect()
+    const aboutTop = aboutRect.top + window.scrollY
+    const aboutBottom = aboutTop + aboutRect.height
+    
+    if (scrollPosition >= aboutTop && scrollPosition < aboutBottom) {
+      if (currentSection.value !== 'about') {
+        currentSection.value = 'about'
+        // Reset colors to default when in about section
+        priceBgColor.value = '#000'
+        textColor.value = '#333'
+      }
+      return
+    }
+  }
+  
+  // Check other sections
+  let foundSection = false
+  for (const section of sections) {
+    const element = document.getElementById(`${section}-section`)
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      const elementTop = rect.top + window.scrollY
+      const elementBottom = elementTop + rect.height
+      
+      if (scrollPosition >= elementTop && scrollPosition < elementBottom) {
+        const sectionName = section === 'icecream' ? 'ice cream' : 
+                          section === 'milktea' ? 'milk tea' : 
+                          section
+        if (currentSection.value !== sectionName) {
+          currentSection.value = sectionName
+          updateSectionColors(sectionName)
+        }
+        foundSection = true
+        break
+      }
+    }
+  }
+  
+  // If not in any section, keep the current section
+}
+
+// Set up scroll listener with debounce
+let scrollTimeout: number | null = null
+const throttledHandleScroll = () => {
+  if (scrollTimeout !== null) {
+    cancelAnimationFrame(scrollTimeout)
+  }
+  scrollTimeout = requestAnimationFrame(handleScroll)
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', throttledHandleScroll, { passive: true })
+  // Initial check
+  handleScroll()
+})
+
+// Clean up scroll listener
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', throttledHandleScroll)
+  if (scrollTimeout !== null) {
+    cancelAnimationFrame(scrollTimeout)
+  }
+})
 </script>
 
 <template>
@@ -63,8 +162,21 @@ const handleNavigation = (section: string) => {
     />
     
     <!-- Sections -->
-    <About />
-    <Icecream ref="icecreamRef" />
+    <section id="about-section">
+      <About />
+    </section>
+    <section id="icecream-section">
+      <Icecream ref="icecreamRef" />
+    </section>
+    <section id="milktea-section">
+      <Milktea />
+    </section>
+    <section id="float-section">
+      <Float />
+    </section>
+    <section id="juice-section">
+      <Juice />
+    </section>
     
   </main>
 </template>
