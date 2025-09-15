@@ -154,7 +154,7 @@ const handleNavigation = (section: string) => {
   border-radius: 8px;
   transition: all 0.2s ease;
   user-select: none;
-  font-weight: 600;
+  font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   color: rgba(0, 0, 0, 0.8);
 }
