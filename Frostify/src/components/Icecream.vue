@@ -15,11 +15,18 @@ const item = computed(() => items.value[currentIndex.value] || null)
 // Next item function
 const nextItem = () => {
   if (items.value.length <= 1) return
-  currentIndex.value = (currentIndex.value + 1) % items.value.length
+  
+  // Start the background fade out
   inView.value = false
-  requestAnimationFrame(() => {
+  
+  // Wait for the fade out to complete before changing the image
+  setTimeout(() => {
+    currentIndex.value = (currentIndex.value + 1) % items.value.length
+    // Force a reflow to ensure the transition works
+    void document.body.offsetHeight
+    // Fade the new content in
     inView.value = true
-  })
+  }, 400) // Match this with the CSS transition duration
 }
 
 // in-view detection
@@ -90,7 +97,11 @@ onBeforeUnmount(() => {
 const containerStyle = computed(() => {
 	const backgroundImageUrl = item.value?.bg || ''
 	return {
-		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none'
+		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
+		transition: 'background-image 0.8s ease-in-out',
+		backgroundSize: 'cover',
+		backgroundPosition: 'center',
+		backgroundRepeat: 'no-repeat'
 	}
 })
 
@@ -156,14 +167,15 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 /* Layout */
 .icecream-root {
-	position: relative; /* anchor overlay */
+	position: relative;
 	width: 100vw;
 	height: 100vh;
 	display: flex;
 	background-position: center;
 	background-size: cover;
 	background-repeat: no-repeat;
-	overflow: hidden; /* keep everything inside the viewport */
+	overflow: hidden;
+	transition: background-image 0.8s ease-in-out;
 }
 
 .icecream-wrap {
