@@ -115,7 +115,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 		<!-- Centered overlay image at 90% viewport height -->
 		<div v-if="overlayVisible" class="image-overlay">
-			<img class="overlay-img" :class="[inView ? 'rotate-rise' : '']" :src="overlaySrc" alt="float" />
+			<img class="overlay-img" :class="[inView ? 'zoom-in' : '']" :src="overlaySrc" alt="float" />
 		</div>
 	</section>
 </template>
@@ -213,15 +213,15 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	filter: drop-shadow(0 18px 30px rgba(0,0,0,0.15));
 }
 
-/* Rise from left (-90deg) to upright (0deg) */
-@keyframes riseUpright {
-	0% { transform: rotate(-90deg); opacity: 0; }
-	60% { transform: rotate(8deg); opacity: 1; }
-	100% { transform: rotate(0deg); }
+/* Zoom-in from front (scale) */
+@keyframes zoomInFront {
+	0% { transform: scale(0.85); opacity: 0; }
+	60% { transform: scale(1.03); opacity: 1; }
+	100% { transform: scale(1); }
 }
 
 /* Trigger animations only when in view */
-.animate .rotate-rise { animation: riseUpright 900ms cubic-bezier(.2,.7,.3,1) both; }
+.animate .zoom-in { animation: zoomInFront 800ms cubic-bezier(.2,.7,.3,1) both; }
 
 .flavor-row {
 	width: 100%;
