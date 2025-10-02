@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Define the generic type for database rows
@@ -19,17 +19,20 @@ export interface DatabaseRow {
 interface Props {
   tableName: string
   columns?: string
-  limit?: number
+  startId?: number
+  orderBy?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   columns: '*',
-  limit: 1
+  startId: undefined,
+  orderBy: 'id'
 })
 
 // Emits for the component
 const emit = defineEmits<{
   dataLoaded: [data: DatabaseRow[]]
+  rowChanged: [row: DatabaseRow | null]
   error: [error: string]
   loading: [isLoading: boolean]
 }>()
@@ -38,6 +41,11 @@ const emit = defineEmits<{
 const data = ref<DatabaseRow[]>([])
 const loading = ref(true)
 const error = ref('')
+const currentIndex = ref(0)
+const currentRow = computed<DatabaseRow | null>(() => {
+  if (!data.value.length) return null
+  return data.value[currentIndex.value]
+})
 
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
@@ -62,13 +70,21 @@ const fetchData = async () => {
     const { data: fetchedData, error: fetchError } = await supabase
       .from(props.tableName)
       .select(props.columns)
-      .limit(props.limit)
+      .order(props.orderBy, { ascending: true })
 
     if (fetchError) throw fetchError
 
     if (fetchedData && Array.isArray(fetchedData)) {
       data.value = fetchedData as unknown as DatabaseRow[]
+      // initialize current index by startId if provided
+      if (typeof props.startId === 'number') {
+        const idx = data.value.findIndex(r => r.id === props.startId)
+        currentIndex.value = idx >= 0 ? idx : 0
+      } else {
+        currentIndex.value = 0
+      }
       emit('dataLoaded', data.value)
+      emit('rowChanged', currentRow.value)
     } else {
       throw new Error(`No data returned from table '${props.tableName}'. Check table data and RLS policies.`)
     }
@@ -90,9 +106,32 @@ onMounted(() => {
 // Expose methods for parent components
 defineExpose({
   fetchData,
+  nextRow: () => {
+    if (!data.value.length) return
+    currentIndex.value = (currentIndex.value + 1) % data.value.length
+    emit('rowChanged', currentRow.value)
+  },
+  prevRow: () => {
+    if (!data.value.length) return
+    currentIndex.value = (currentIndex.value - 1 + data.value.length) % data.value.length
+    emit('rowChanged', currentRow.value)
+  },
   data,
+  currentRow,
   loading,
   error
+})
+
+// React to startId prop changes
+watch(() => props.startId, (newVal) => {
+  if (!data.value.length) return
+  if (typeof newVal === 'number') {
+    const idx = data.value.findIndex(r => r.id === newVal)
+    if (idx >= 0) {
+      currentIndex.value = idx
+      emit('rowChanged', currentRow.value)
+    }
+  }
 })
 </script>
 

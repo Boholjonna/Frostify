@@ -12,21 +12,18 @@ const errorMessage = ref('')
 // Computed property for current item
 const item = computed(() => items.value[currentIndex.value] || null)
 
-// Next item function
+// Ref to access Getdata's exposed methods
+const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
+
+// Next item function delegates to Getdata's nextRow
 const nextItem = () => {
-  if (items.value.length <= 1) return
-  
-  // Start the background fade out
+  if (!getdataRef.value) return
   inView.value = false
-  
-  // Wait for the fade out to complete before changing the image
   setTimeout(() => {
-    currentIndex.value = (currentIndex.value + 1) % items.value.length
-    // Force a reflow to ensure the transition works
+    getdataRef.value?.nextRow()
     void document.body.offsetHeight
-    // Fade the new content in
     inView.value = true
-  }, 400) // Match this with the CSS transition duration
+  }, 400)
 }
 
 // in-view detection
@@ -57,12 +54,18 @@ watch(inView, (newVal: boolean) => {
 
 // Event handlers for Getdata component
 const handleDataLoaded = (data: DatabaseRow[]) => {
-	if (data && data.length > 0) {
-		items.value = data as IceCreamRow[]
-		currentIndex.value = 0
-	} else {
-		errorMessage.value = 'No ice-cream rows returned. Check table data and RLS policies.'
-	}
+    if (data && data.length > 0) {
+        items.value = data as IceCreamRow[]
+        currentIndex.value = 0
+    } else {
+        errorMessage.value = 'No ice-cream rows returned. Check table data and RLS policies.'
+    }
+}
+
+const handleRowChanged = (row: DatabaseRow | null) => {
+  if (!row || !items.value.length) return
+  const idx = items.value.findIndex(r => r.id === row.id)
+  if (idx >= 0) currentIndex.value = idx
 }
 
 const handleError = (error: string) => {
@@ -115,14 +118,15 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 <template>
 	<!-- Data fetching component -->
-	<Getdata 
-		table-name="ice-cream" 
-		:columns="'*'" 
-		:limit="10"
-		@data-loaded="handleDataLoaded"
-		@error="handleError"
-		@loading="handleLoading"
-	/>
+    <Getdata 
+        ref="getdataRef"
+        table-name="ice-cream"
+        :columns="'*'"
+        @data-loaded="handleDataLoaded"
+        @row-changed="handleRowChanged"
+        @error="handleError"
+        @loading="handleLoading"
+    />
 	
 	<section ref="rootRef" id="icecream-section" class="icecream-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="icecream-wrap">
