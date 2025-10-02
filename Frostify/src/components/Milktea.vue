@@ -4,9 +4,11 @@ import Getdata, { type DatabaseRow } from './Getdata.vue'
 
 type MilkteaRow = DatabaseRow
 
-const item = ref<MilkteaRow | null>(null)
+const items = ref<MilkteaRow[]>([])
+const currentIndex = ref(0)
 const loading = ref(true)
 const errorMessage = ref('')
+const item = computed(() => items.value[currentIndex.value] || null)
 
 // in-view detection
 const rootRef = ref<HTMLElement | null>(null)
@@ -16,10 +18,17 @@ let observer: IntersectionObserver | null = null
 // Event handlers for Getdata component
 const handleDataLoaded = (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
-		item.value = data[0] as MilkteaRow
+		items.value = data as MilkteaRow[]
+		currentIndex.value = 0
 	} else {
 		errorMessage.value = 'No milk tea rows returned. Check table data and RLS policies.'
 	}
+}
+
+const handleRowChanged = (row: DatabaseRow | null) => {
+	if (!row || !items.value.length) return
+	const idx = items.value.findIndex(r => r.id === row.id)
+	if (idx >= 0) currentIndex.value = idx
 }
 
 const handleError = (error: string) => {
@@ -45,7 +54,7 @@ onMounted(() => {
 	)
 	if (rootRef.value) observer.observe(rootRef.value)
 
-	// listen for explicit trigger from About button
+// listen for explicit trigger from About button
 	const trigger = () => { inView.value = false; requestAnimationFrame(() => inView.value = true) }
 	window.addEventListener('trigger-milktea-anim', trigger)
 	// store off handler for cleanup
@@ -60,10 +69,10 @@ onBeforeUnmount(() => {
 })
 
 const containerStyle = computed(() => {
-	const backgroundImageUrl = item.value?.bg || ''
-	return {
+    const backgroundImageUrl = item.value?.bg || ''
+    return {
 		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none'
-	}
+    }
 })
 
 const priceBg = computed(() => item.value?.['price-bgcolor'] || '#000')
@@ -72,15 +81,30 @@ const textColor = computed(() => item.value?.['text-color'] || '#333')
 
 const overlayVisible = computed<boolean>(() => Boolean(item.value && item.value.image))
 const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image : ''))
+// Ref to access Getdata's exposed methods
+const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
+
+// Next button delegates to Getdata's nextRow to keep indices in sync
+const nextItem = () => {
+	if (!getdataRef.value) return
+	inView.value = false
+	setTimeout(() => {
+		getdataRef.value?.nextRow()
+		void document.body.offsetHeight
+		inView.value = true
+	}, 400)
+}
+
 </script>
 
 <template>
 	<!-- Data fetching component -->
 	<Getdata 
-		table-name="milk-tea" 
-		:columns="'*'" 
-		:limit="1"
+		ref="getdataRef"
+		table-name="milk-tea"
+		:columns="'*'"
 		@data-loaded="handleDataLoaded"
+		@row-changed="handleRowChanged"
 		@error="handleError"
 		@loading="handleLoading"
 	/>
@@ -105,8 +129,8 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 			</div>
 
 			<div class="flavor-row fade-up">
-				<h1 class="flavor" :style="{ color: textColor }">{{ item?.flavor }}</h1>
-				<button class="next-btn">next flavor</button>
+			<h1 class="flavor" :style="{ color: textColor }">{{ item?.flavor }}</h1>
+			<button class="next-btn" @click="nextItem" :disabled="items.length <= 1">next flavor</button>
 			</div>
 
 			<div v-if="loading" class="status">Loading…</div>
