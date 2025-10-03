@@ -7,16 +7,49 @@ type FloatRow = DatabaseRow
 const item = ref<FloatRow | null>(null)
 const loading = ref(true)
 const errorMessage = ref('')
+const imagesLoaded = ref(false)
 
 // in-view detection
 const rootRef = ref<HTMLElement | null>(null)
 const inView = ref(false)
 let observer: IntersectionObserver | null = null
 
+// Preload all images
+const preloadImages = async (data: FloatRow[]) => {
+	imagesLoaded.value = false
+	const imageUrls: string[] = []
+	
+	// Collect all image URLs and background URLs
+	data.forEach(item => {
+		if (item.image) imageUrls.push(item.image)
+		if (item.bg) imageUrls.push(item.bg)
+	})
+	
+	// Preload all images
+	const promises = imageUrls.map(url => {
+		return new Promise<void>((resolve) => {
+			const img = new Image()
+			img.onload = () => resolve()
+			img.onerror = () => resolve() // Continue even if an image fails
+			img.src = url
+		})
+	})
+	
+	try {
+		await Promise.all(promises)
+		imagesLoaded.value = true
+	} catch (error) {
+		console.error('Error preloading images:', error)
+		imagesLoaded.value = true // Continue anyway
+	}
+}
+
 // Event handlers for Getdata component
-const handleDataLoaded = (data: DatabaseRow[]) => {
+const handleDataLoaded = async (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
 		item.value = data[0] as FloatRow
+		// Preload all images before showing content
+		await preloadImages([item.value])
 	} else {
 		errorMessage.value = 'No float rows returned. Check table data and RLS policies.'
 	}
@@ -35,7 +68,7 @@ onMounted(() => {
 	observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
+				if (entry.isIntersecting && imagesLoaded.value) {
 					inView.value = true // trigger once
 					if (observer && rootRef.value) observer.unobserve(rootRef.value)
 				}
@@ -62,7 +95,9 @@ onBeforeUnmount(() => {
 const containerStyle = computed(() => {
 	const backgroundImageUrl = item.value?.bg || ''
 	return {
-		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none'
+		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
+		opacity: imagesLoaded.value ? '1' : '0',
+		transition: 'background-image 0.8s ease-in-out, opacity 0.3s ease-in-out'
 	}
 })
 
@@ -211,6 +246,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	max-width: 92vw;
 	transform-origin: 50% 90%;
 	filter: drop-shadow(0 18px 30px rgba(0,0,0,0.15));
+	transition: opacity 0.3s ease-in-out;
 }
 
 /* Zoom-in from front (scale) */

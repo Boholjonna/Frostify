@@ -9,6 +9,7 @@ const items = ref<MilkteaRow[]>([])
 const currentIndex = ref(0)
 const loading = ref(true)
 const errorMessage = ref('')
+const imagesLoaded = ref(false)
 const item = computed(() => items.value[currentIndex.value] || null)
 
 // in-view detection
@@ -16,11 +17,43 @@ const rootRef = ref<HTMLElement | null>(null)
 const inView = ref(false)
 let observer: IntersectionObserver | null = null
 
+// Preload all images
+const preloadImages = async (data: MilkteaRow[]) => {
+	imagesLoaded.value = false
+	const imageUrls: string[] = []
+	
+	// Collect all image URLs and background URLs
+	data.forEach(item => {
+		if (item.image) imageUrls.push(item.image)
+		if (item.bg) imageUrls.push(item.bg)
+	})
+	
+	// Preload all images
+	const promises = imageUrls.map(url => {
+		return new Promise<void>((resolve) => {
+			const img = new Image()
+			img.onload = () => resolve()
+			img.onerror = () => resolve() // Continue even if an image fails
+			img.src = url
+		})
+	})
+	
+	try {
+		await Promise.all(promises)
+		imagesLoaded.value = true
+	} catch (error) {
+		console.error('Error preloading images:', error)
+		imagesLoaded.value = true // Continue anyway
+	}
+}
+
 // Event handlers for Getdata component
-const handleDataLoaded = (data: DatabaseRow[]) => {
+const handleDataLoaded = async (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
 		items.value = data as MilkteaRow[]
 		currentIndex.value = 0
+		// Preload all images before showing content
+		await preloadImages(items.value)
 	} else {
 		errorMessage.value = 'No milk tea rows returned. Check table data and RLS policies.'
 	}
@@ -45,7 +78,7 @@ onMounted(() => {
 	observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
+				if (entry.isIntersecting && imagesLoaded.value) {
 					inView.value = true // trigger once
 					if (observer && rootRef.value) observer.unobserve(rootRef.value)
 				}
@@ -72,7 +105,9 @@ onBeforeUnmount(() => {
 const containerStyle = computed(() => {
     const backgroundImageUrl = item.value?.bg || ''
     return {
-		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none'
+		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
+		opacity: imagesLoaded.value ? '1' : '0',
+		transition: 'background-image 0.8s ease-in-out, opacity 0.3s ease-in-out'
     }
 })
 

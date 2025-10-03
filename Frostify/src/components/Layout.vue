@@ -72,7 +72,7 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
   background-size: cover;
   background-repeat: no-repeat;
   overflow: hidden;
-  transition: background-image 0.8s ease-in-out;
+  transition: background-image 0.8s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .product-wrap {
@@ -121,6 +121,7 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
   object-fit: contain;
   transform-origin: center bottom;
   margin-top: 50px;
+  transition: opacity 0.3s ease-in-out;
 }
 
 /* Zoom-in from front (scale) */
