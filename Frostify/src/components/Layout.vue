@@ -25,10 +25,8 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
 <template>
   <section :id="props.sectionId" class="product-root" :class="{ animate: props.inView }" :style="props.containerStyle">
     <div class="product-wrap">
-      <!-- Main image from database with animation -->
-      <div v-if="overlayVisible" class="main-image-container">
-        <img :src="overlaySrc" alt="product" class="main-image" :class="{ 'zoom-in': props.inView }" />
-      </div>
+      <!-- Main image from database with animation (no container) -->
+      <img v-if="overlayVisible" :src="overlaySrc" alt="product" class="main-image" :class="{ 'zoom-in': props.inView }" />
 
       <!-- Prices section -->
       <div class="prices drop-down">
@@ -114,16 +112,6 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   font-size: 12px;
   font-weight: 600;
-}
-
-/* Main image container */
-.main-image-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  padding: 0;
 }
 
 .main-image {

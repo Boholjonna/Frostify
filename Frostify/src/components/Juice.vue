@@ -97,8 +97,7 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
 				</div>
-				<div class="price-circle" :style="{ background: priceBg }">
-					<span class="price-text">{{ item?.['price-m'] || 'M-—' }}</span>
+				<div class="price-circle" :style="{ background: priceBg }">					<span class="price-text">{{ item?.['price-m'] || 'M-—' }}</span>
 				</div>
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-l'] || 'L-—' }}</span>
