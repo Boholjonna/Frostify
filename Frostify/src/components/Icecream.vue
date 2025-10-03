@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount, inject, watch } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 import Layout from './Layout.vue'
 
@@ -40,17 +40,6 @@ defineExpose({
     requestAnimationFrame(() => {
       inView.value = true
     })
-  },
-  priceBg: computed(() => item.value?.['price-bgcolor'] || '#000'),
-  textColor: computed(() => item.value?.['text-color'] || '#333')
-})
-
-const updateSectionColors = inject<(section: string) => void>('updateSectionColors')
-
-// Update colors when this section comes into view
-watch(inView, (newVal: boolean) => {
-  if (newVal && updateSectionColors) {
-    updateSectionColors('ice cream')
   }
 })
 

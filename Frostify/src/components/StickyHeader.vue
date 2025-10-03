@@ -4,14 +4,10 @@ import { ref, computed } from 'vue'
 // Props for the component
 interface Props {
   currentSection: string
-  priceBgColor?: string
-  textColor?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  currentSection: 'ice cream',
-  priceBgColor: '#000',
-  textColor: '#333'
+  currentSection: 'ice cream'
 })
 
 // Emits for navigation
@@ -25,22 +21,12 @@ const headerRef = ref<HTMLElement | null>(null)
 // Computed to check if we're on the about section
 const isAboutSection = computed(() => props.currentSection.toLowerCase() === 'about')
 
-// Computed styles
-const headerStyles = computed(() => ({
-  '--active-color': props.priceBgColor,
-  '--inactive-color': props.textColor
-}))
-
 const navItemStyle = (label: string) => {
   const isActive = label.toLowerCase() === props.currentSection.toLowerCase()
   return {
-    color: isActive ? props.priceBgColor : props.textColor,
-    '--active-color': props.priceBgColor,
-    '--inactive-color': props.textColor,
     'font-weight': isActive ? 'bold' : 'normal',
-    'border-bottom': isActive ? `2px solid ${props.priceBgColor}` : '2px solid transparent',
-    'padding-bottom': '4px',
-    'transition': 'all 0.2s ease'
+    'border-bottom': isActive ? '2px solid rgba(0, 0, 0, 0.8)' : '2px solid transparent',
+    'padding-bottom': '4px'
   }
 }
 
@@ -72,7 +58,6 @@ const handleNavigation = (section: string) => {
     ref="headerRef"
     v-show="!isAboutSection"
     class="sticky-header"
-    :style="headerStyles"
   >
     <nav class="nav">
       <span 

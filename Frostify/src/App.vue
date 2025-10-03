@@ -9,32 +9,9 @@ import StickyHeader from './components/StickyHeader.vue'
 
 // State for sticky header
 const currentSection = ref('ice cream')
-const priceBgColor = ref('#000')
-const textColor = ref('#333')
 const icecreamRef = ref<{ 
-  triggerAnimation: () => void,
-  priceBg: string,
-  textColor: string 
+  triggerAnimation: () => void
 } | null>(null)
-
-// Update section colors when section changes
-const updateSectionColors = (section: string) => {
-  currentSection.value = section
-  
-  // Default colors
-  let newPriceBg = '#000'
-  let newTextColor = '#333'
-  
-  // Get colors from the active section component
-  if (section === 'ice cream' && icecreamRef.value) {
-    newPriceBg = icecreamRef.value.priceBg
-    newTextColor = icecreamRef.value.textColor
-  }
-  // Add other sections here when implemented
-  
-  priceBgColor.value = newPriceBg
-  textColor.value = newTextColor
-}
 
 // Provide a method to trigger the animation
 const triggerIceCreamAnimation = () => {
@@ -50,7 +27,6 @@ const isScrolling = ref(false)
 const handleNavigation = (section: string) => {
   // Update section immediately
   currentSection.value = section
-  updateSectionColors(section)
   
   // Only scroll if not already at the target section
   const targetId = `${section === 'ice cream' ? 'icecream' : section === 'milk tea' ? 'milktea' : section}-section`
@@ -72,7 +48,6 @@ const handleNavigation = (section: string) => {
 
 // Provide methods to child components
 provide('triggerIceCreamAnimation', triggerIceCreamAnimation)
-provide('updateSectionColors', updateSectionColors)
 provide('navigate', handleNavigation)
 
 // Handle scroll to detect current section
@@ -93,9 +68,6 @@ const handleScroll = () => {
     if (scrollPosition >= aboutTop && scrollPosition < aboutBottom) {
       if (currentSection.value !== 'about') {
         currentSection.value = 'about'
-        // Reset colors to default when in about section
-        priceBgColor.value = '#000'
-        textColor.value = '#333'
       }
       return
     }
@@ -116,7 +88,6 @@ const handleScroll = () => {
                           section
         if (currentSection.value !== sectionName) {
           currentSection.value = sectionName
-          updateSectionColors(sectionName)
         }
         foundSection = true
         break
@@ -156,8 +127,6 @@ onBeforeUnmount(() => {
     <!-- Sticky Header -->
     <StickyHeader 
       :current-section="currentSection"
-      :price-bg-color="priceBgColor"
-      :text-color="textColor"
       @navigate="handleNavigation"
     />
     
