@@ -99,7 +99,7 @@ const handleNavigation = (section: string) => {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.98);
+  background-color: rgba(255, 247, 247, 0.247);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   width: 100%;
