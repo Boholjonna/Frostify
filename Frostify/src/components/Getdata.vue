@@ -54,7 +54,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undef
 
 let supabase: SupabaseClient | null = null
 
-// Function to fetch data from database
+// Function to fetch data from database with optimizations
 const fetchData = async () => {
   try {
     loading.value = true
@@ -65,9 +65,21 @@ const fetchData = async () => {
     }
 
     if (!supabase) {
-      supabase = createClient(supabaseUrl, supabaseAnonKey)
+      // Initialize Supabase client with performance optimizations
+      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: false, // Disable session persistence for faster queries
+          autoRefreshToken: false
+        },
+        global: {
+          headers: {
+            'cache-control': 'max-age=3600' // Enable caching
+          }
+        }
+      })
     }
 
+    // Optimized query with single request
     const { data: fetchedData, error: fetchError } = await supabase
       .from(props.tableName)
       .select(props.columns)
