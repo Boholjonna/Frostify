@@ -17,15 +17,17 @@ const item = computed(() => items.value[currentIndex.value] || null)
 // Ref to access Getdata's exposed methods
 const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
 
-// Next item function delegates to Getdata's nextRow
+// Next item function delegates to Getdata's nextRow with bouncing animation
 const nextItem = () => {
   if (!getdataRef.value) return
   inView.value = false
   setTimeout(() => {
     getdataRef.value?.nextRow()
     void document.body.offsetHeight
-    inView.value = true
-  }, 400)
+    requestAnimationFrame(() => {
+      inView.value = true
+    })
+  }, 300)
 }
 
 // in-view detection
@@ -48,10 +50,11 @@ const preloadImages = async (data: FloatRow[]) => {
 	imagesLoaded.value = false
 	const imageUrls: string[] = []
 	
-	// Collect all image URLs and background URLs
+	// Collect all image URLs, background URLs, and overlay URLs
 	data.forEach(item => {
 		if (item.image) imageUrls.push(item.image)
 		if (item.bg) imageUrls.push(item.bg)
+		if (item.overlay) imageUrls.push(item.overlay)
 	})
 	
 	// Preload all images

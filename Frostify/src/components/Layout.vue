@@ -20,10 +20,16 @@ const emit = defineEmits<{
 
 const overlayVisible = computed<boolean>(() => Boolean(props.item && props.item.image))
 const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image : ''))
+const bgOverlayVisible = computed<boolean>(() => Boolean(props.item && props.item.overlay))
+const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.overlay : ''))
 </script>
 
 <template>
   <section :id="props.sectionId" class="product-root" :class="{ animate: props.inView }" :style="props.containerStyle">
+    <!-- Background overlay wrapping the background image -->
+    <div v-if="bgOverlayVisible" class="bg-overlay bounce-in" :class="{ 'bounce-in-active': props.inView }">
+      <img :src="bgOverlaySrc" alt="background overlay" class="overlay-image" />
+    </div>
     <div class="product-wrap">
       <!-- Main image from database with animation (no container) -->
       <img v-if="overlayVisible" :src="overlaySrc" alt="product" class="main-image" :class="{ 'zoom-in': props.inView }" />
@@ -86,6 +92,8 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
   padding: 20px 16px;
   box-sizing: border-box;
   margin-top: -40px;
+  position: relative;
+  z-index: 2;
 }
 
 .prices {
@@ -122,6 +130,43 @@ const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image 
   transform-origin: center bottom;
   margin-top: 50px;
   transition: opacity 0.3s ease-in-out;
+}
+
+/* Background overlay styles */
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.overlay-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Slow popping animation for overlay */
+@keyframes slowPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.bounce-in-active {
+  animation: slowPop 1.0s ease-out both;
 }
 
 /* Zoom-in from front (scale) */

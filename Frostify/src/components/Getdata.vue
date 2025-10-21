@@ -13,6 +13,7 @@ export interface DatabaseRow {
   image: string
   'text-color': string
   'price-bgcolor': string
+  overlay?: string
 }
 
 // Props for the component
