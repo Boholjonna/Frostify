@@ -31,7 +31,14 @@ const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.ov
 <template>
   <section :id="props.sectionId" class="product-root" :class="{ animate: props.inView }" :style="props.containerStyle">
     <!-- Background overlay wrapping the background image -->
-    <div v-if="bgOverlayVisible" class="bg-overlay bounce-in" :class="{ 'bounce-in-active': props.inView }">
+    <div 
+      v-if="bgOverlayVisible" 
+      class="bg-overlay"
+      :class="{ 
+        'bounce-in-active': props.inView && props.sectionId !== 'juice-section',
+        'sketch-in-active': props.inView && props.sectionId === 'juice-section'
+      }"
+    >
       <img :src="bgOverlaySrc" alt="background overlay" class="overlay-image" />
     </div>
     <div class="product-wrap">
@@ -178,6 +185,39 @@ const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.ov
   0% { transform: scale(0.85); opacity: 0; }
   60% { transform: scale(1.03); opacity: 1; }
   100% { transform: scale(1); }
+}
+
+/* Sketch-in animation for juice overlay: jittery drawn look */
+@keyframes sketchIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) rotate(-1deg);
+    filter: drop-shadow(0 0 0 rgba(0,0,0,0.0));
+  }
+  30% {
+    opacity: 0.6;
+    transform: scale(1.02) rotate(0.6deg);
+    filter: drop-shadow(0 2px 0 rgba(0,0,0,0.06)) drop-shadow(0 6px 10px rgba(0,0,0,0.08));
+  }
+  60% {
+    opacity: 0.9;
+    transform: scale(0.99) rotate(-0.4deg);
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.08)) drop-shadow(0 10px 18px rgba(0,0,0,0.12));
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.01) rotate(0.2deg);
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)) drop-shadow(0 14px 22px rgba(0,0,0,0.14));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    filter: drop-shadow(0 16px 26px rgba(0,0,0,0.16));
+  }
+}
+
+.sketch-in-active {
+  animation: sketchIn 900ms steps(10, end) both;
 }
 
 /* Stomp in animation - drops from above with bounce */
