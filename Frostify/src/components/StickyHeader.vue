@@ -36,6 +36,7 @@ const handleNavigation = (section: string) => {
   
   // Map section names to actual section IDs
   const sectionIdMap: { [key: string]: string } = {
+    'about': 'about-section',
     'ice cream': 'icecream-section',
     'milk tea': 'milktea-section',
     'float': 'float-section',
@@ -59,36 +60,46 @@ const handleNavigation = (section: string) => {
     v-show="!isAboutSection"
     class="sticky-header"
   >
-    <nav class="nav">
-      <span 
-        class="nav-item" 
-        :style="navItemStyle('ice cream')"
-        @click="handleNavigation('ice cream')"
-      >
-        ice cream
-      </span>
-      <span 
-        class="nav-item" 
-        :style="navItemStyle('milk tea')"
-        @click="handleNavigation('milk tea')"
-      >
-        milk tea
-      </span>
-      <span 
-        class="nav-item" 
-        :style="navItemStyle('float')"
-        @click="handleNavigation('float')"
-      >
-        float
-      </span>
-      <span 
-        class="nav-item" 
-        :style="navItemStyle('juice')"
-        @click="handleNavigation('juice')"
-      >
-        juice
-      </span>
-    </nav>
+    <div class="header-inner">
+      <div class="left-spacer" aria-hidden="true"></div>
+
+      <nav class="nav">
+        <span 
+          class="nav-item" 
+          :style="navItemStyle('ice cream')"
+          @click="handleNavigation('ice cream')"
+        >
+          ice cream
+        </span>
+        <span 
+          class="nav-item" 
+          :style="navItemStyle('milk tea')"
+          @click="handleNavigation('milk tea')"
+        >
+          milk tea
+        </span>
+        <span 
+          class="nav-item" 
+          :style="navItemStyle('float')"
+          @click="handleNavigation('float')"
+        >
+          float
+        </span>
+        <span 
+          class="nav-item" 
+          :style="navItemStyle('juice')"
+          @click="handleNavigation('juice')"
+        >
+          juice
+        </span>
+      </nav>
+
+      <button class="home-btn" aria-label="Home" @click="handleNavigation('about')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3.172l8 7.2V20a1 1 0 0 1-1 1h-4.5a.5.5 0 0 1-.5-.5v-5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5a.5.5 0 0 1-.5.5H3a1 1 0 0 1-1-1v-9.628l8-7.2a2 2 0 0 1 2 0zM12 1a4 4 0 0 0-2.667.992l-8 7.2A2 2 0 0 0 1 10.728V20a3 3 0 0 0 3 3h4.5A2.5 2.5 0 0 0 11 20.5v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5A2.5 2.5 0 0 0 17.5 23H22a3 3 0 0 0 3-3v-9.272a2 2 0 0 0-.333-1.536l-8-7.2A4 4 0 0 0 12 1z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 </template>
 
@@ -112,6 +123,43 @@ const handleNavigation = (section: string) => {
   padding: 0 20px;
   box-sizing: border-box;
   will-change: transform, opacity;
+}
+
+.header-inner {
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+}
+
+.left-spacer {
+  width: 36px;
+  height: 36px;
+}
+
+.nav { 
+  justify-self: center;
+}
+
+.home-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.home-btn:hover {
+  transform: translateY(-1px);
+}
+
+.home-btn:active {
+  transform: translateY(0);
 }
 
 .sticky-header.v-leave-active,
