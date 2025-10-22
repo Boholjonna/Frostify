@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
+import Layout from './Layout.vue'
 
 type JuiceRow = DatabaseRow
 
@@ -13,10 +14,31 @@ const props = withDefaults(defineProps<Props>(), {
   preloadedData: () => []
 })
 
-const item = ref<JuiceRow | null>(null)
+const items = ref<JuiceRow[]>([])
+const currentIndex = ref(0)
 const loading = ref(false)
 const errorMessage = ref('')
 const imagesLoaded = ref(true)
+
+// Computed property for current item
+const item = computed(() => items.value[currentIndex.value] || null)
+
+// Ref to access Getdata's exposed methods
+const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
+
+// Next item function
+const nextItem = () => {
+  if (!items.value.length) return
+  inView.value = false
+  setTimeout(() => {
+    currentIndex.value = (currentIndex.value + 1) % items.value.length
+    if (getdataRef.value) {
+      getdataRef.value.nextRow()
+    }
+    void document.body.offsetHeight
+    inView.value = true
+  }, 400)
+}
 
 // in-view detection
 const rootRef = ref<HTMLElement | null>(null)
@@ -56,7 +78,8 @@ const preloadImages = async (data: JuiceRow[]) => {
 // Initialize with preloaded data
 watch(() => props.preloadedData, (data) => {
   if (data && data.length > 0) {
-    item.value = data[0] as JuiceRow
+    items.value = data as JuiceRow[]
+    currentIndex.value = 0
     imagesLoaded.value = true
   }
 }, { immediate: true })
@@ -64,12 +87,19 @@ watch(() => props.preloadedData, (data) => {
 // Event handlers for Getdata component
 const handleDataLoaded = async (data: DatabaseRow[]) => {
 	if (data && data.length > 0) {
-		item.value = data[0] as JuiceRow
+		items.value = data as JuiceRow[]
+		currentIndex.value = 0
 		// Preload all images before showing content
-		await preloadImages([item.value])
+		await preloadImages(items.value)
 	} else {
 		errorMessage.value = 'No juice rows returned. Check table data and RLS policies.'
 	}
+}
+
+const handleRowChanged = (row: DatabaseRow | null) => {
+	if (!row || !items.value.length) return
+	const idx = items.value.findIndex(r => r.id === row.id)
+	if (idx >= 0) currentIndex.value = idx
 }
 
 const handleError = (error: string) => {
@@ -120,199 +150,35 @@ const containerStyle = computed(() => {
 
 const priceBg = computed(() => item.value?.['price-bgcolor'] || '#000')
 const textColor = computed(() => item.value?.['text-color'] || '#333')
-
-
-const overlayVisible = computed<boolean>(() => Boolean(item.value && item.value.image))
-const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image : ''))
 </script>
 
 <template>
 	<!-- Data fetching component (only if no preloaded data) -->
 	<Getdata 
 		v-if="!preloadedData || preloadedData.length === 0"
+		ref="getdataRef"
 		table-name="juice" 
-		:columns="'*'" 
-		:limit="1"
+		:columns="'*'"
 		@data-loaded="handleDataLoaded"
+		@row-changed="handleRowChanged"
 		@error="handleError"
 		@loading="handleLoading"
 	/>
 	
-	<section ref="rootRef" id="juice-section" class="juice-root" :class="{ animate: inView }" :style="containerStyle">
-		<div class="juice-wrap">
-			<!-- Main image from database with animation -->
-			<img v-if="overlayVisible" :src="overlaySrc" alt="juice" class="main-image" :class="{ 'zoom-in': inView }" />
-
-			<!-- Prices section -->
-			<div class="prices drop-down">
-				<div class="price-circle" :style="{ background: priceBg }">
-					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
-				</div>
-				<div class="price-circle" :style="{ background: priceBg }">
-					<span class="price-text">{{ item?.['price-m'] || 'M-—' }}</span>
-				</div>
-				<div class="price-circle" :style="{ background: priceBg }">
-					<span class="price-text">{{ item?.['price-l'] || 'L-—' }}</span>
-				</div>
-			</div>
-
-			<div class="flavor-row fade-up">
-				<h1 class="flavor" :style="{ color: textColor }">{{ item?.flavor }}</h1>
-				<button class="next-btn">next flavor</button>
-			</div>
-
-			<div v-if="loading" class="status">Loading…</div>
-			<div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
-		</div>
+	<section ref="rootRef">
+		<Layout 
+			section-id="juice-section"
+			:in-view="inView"
+			:container-style="containerStyle"
+			:price-bg="priceBg"
+			:text-color="textColor"
+			:item="item"
+			:loading="loading"
+			:error-message="errorMessage"
+			:items-length="items.length"
+			@next="nextItem"
+		/>
 	</section>
 </template>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kavoon&display=swap');
 
-/* Layout */
-.juice-root {
-	position: relative; /* anchor overlay */
-	width: 100vw;
-	height: 100vh;
-	display: flex;
-	background-position: center;
-	background-size: cover;
-	background-repeat: no-repeat;
-	overflow: hidden; /* keep everything inside the viewport */
-}
-
-.juice-wrap {
-	width: 100%;
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 20px;
-	padding: 20px 16px;
-	box-sizing: border-box;
-	margin-top: -40px;
-	position: relative;
-	z-index: 2;
-}
-
-
-.prices {
-	display: flex;
-	gap: 20px;
-	align-items: center;
-	justify-content: center;
-	margin: 0;
-	flex: 0 0 auto;
-	position: relative;
-	z-index: 2;
-}
-
-.price-circle {
-	width: 50px;
-	height: 50px;
-	border-radius: 50%;
-	display: grid;
-	place-items: center;
-}
-
-.price-text {
-	color: #ffffff;
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	font-size: 12px;
-	font-weight: 600;
-}
-
-.main-image {
-	max-width: 80%;
-	height: auto;
-	max-height: 60vh;
-	object-fit: contain;
-	transform-origin: center bottom;
-	margin-top: 50px;
-	transition: opacity 0.3s ease-in-out;
-}
-
-/* Zoom-in from front (scale) */
-@keyframes zoomInFront {
-	0% { transform: scale(0.85); opacity: 0; }
-	60% { transform: scale(1.03); opacity: 1; }
-	100% { transform: scale(1); }
-}
-
-/* Trigger animations only when in view */
-.animate .zoom-in { animation: zoomInFront 800ms cubic-bezier(.2,.7,.3,1) both; }
-
-.flavor-row {
-	width: 100%;
-	max-width: 900px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 24px;
-	flex: 0 0 auto; /* keep its natural height */
-}
-
-.flavor {
-	font-family: 'Kavoon', Georgia, 'Times New Roman', serif;
-	font-size: clamp(28px, 6vw, 50px);
-	-webkit-text-stroke: 1.5px #ffffff; /* reduced by 50% */
-	text-shadow: 0 0 0 #fff;
-}
-
-.next-btn {
-	background: #ffffff;
-	color: #3a2f2f;
-	border: 1px solid #D2C9C9;
-	border-radius: 24px;
-	padding: 10px 18px;
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
-	transition: transform .25s ease, box-shadow .25s ease;
-}
-
-.next-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 7px 10px rgba(0,0,0,0.12);
-}
-
-.status {
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	margin-top: 4px;
-	flex: 0 0 auto;
-}
-
-.status.error {
-	color: #b00020;
-}
-
-/* Harmonized animations */
-@keyframes fadeUp {
-	0% { opacity: 0; transform: translateY(12px); }
-	100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeDown {
-	0% { opacity: 0; transform: translateY(-12px); }
-	100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes popIn {
-	0% { opacity: 0; transform: scale(0.92); }
-	60% { opacity: 1; transform: scale(1.02); }
-	100% { transform: scale(1); }
-}
-
-@keyframes dropDown {
-	0% { opacity: 0; transform: translateY(-30px); }
-	70% { opacity: 1; transform: translateY(6px); }
-	100% { transform: translateY(0); }
-}
-
-/* Only animate when parent gets 'animate' */
-.animate .fade-up { animation: fadeUp .6s ease both; animation-delay: .15s; }
-.animate .fade-down { animation: fadeDown .6s ease both; }
-.animate .pop-in { animation: popIn .7s cubic-bezier(.2,.7,.3,1) both; animation-delay: .2s; }
-.animate .drop-down { animation: dropDown .7s ease both; animation-delay: .1s; }
-</style>
