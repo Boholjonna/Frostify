@@ -133,21 +133,14 @@ onMounted(async () => {
   try {
     // Preload all data from database
     const data = await preloadAllData()
-    // Preload only critical images for first paint, but don't block too long
-    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1200))
-    await Promise.race([preloadCriticalImages(data), timeout])
+    // Ensure ALL images are preloaded before rendering to avoid mismatches
+    await preloadAllImages(data)
 
     // Store preloaded data and render immediately
     preloadedData.value = data
     isLoading.value = false
 
-    // Warm the rest of the images in the background at idle time (non-blocking)
-    const warmup = () => preloadAllImages(data).catch(() => {/* ignore warmup failures */})
-    if ('requestIdleCallback' in window) {
-      ;(window as any).requestIdleCallback(warmup, { timeout: 2000 })
-    } else {
-      setTimeout(warmup, 0)
-    }
+    // No background warmup needed since all images are loaded
     
     // Set up scroll listener after content is ready
     window.addEventListener('scroll', throttledHandleScroll, { passive: true })

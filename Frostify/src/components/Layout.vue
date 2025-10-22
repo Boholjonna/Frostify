@@ -39,11 +39,11 @@ const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.ov
         'sketch-in-active': props.inView && props.sectionId === 'juice-section'
       }"
     >
-      <img :src="bgOverlaySrc" alt="background overlay" class="overlay-image" />
+      <img :key="props.item?.id" :src="bgOverlaySrc" alt="background overlay" class="overlay-image" />
     </div>
     <div class="product-wrap">
       <!-- Main image from database with animation (no container) -->
-      <img v-if="overlayVisible" :src="overlaySrc" alt="product" class="main-image" :class="{ 'stomp-in': props.inView && props.sectionId === 'juice-section', 'zoom-in': props.inView && props.sectionId !== 'juice-section' }" />
+      <img v-if="overlayVisible" :key="props.item?.id" :src="overlaySrc" alt="product" class="main-image" :class="{ 'stomp-in': props.inView && props.sectionId === 'juice-section', 'zoom-in': props.inView && props.sectionId !== 'juice-section' }" />
 
       <!-- Prices section -->
       <div class="prices drop-down">
