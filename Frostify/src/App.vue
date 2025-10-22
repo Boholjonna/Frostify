@@ -6,7 +6,7 @@ import Milktea from './components/Milktea.vue'
 import Float from './components/Float.vue'
 import Juice from './components/Juice.vue'
 import StickyHeader from './components/StickyHeader.vue'
-import { preloadAllData, preloadAllImages, type PreloadedData } from './services/dataPreloader'
+import { preloadAllData, preloadAllImages, preloadCriticalImages, type PreloadedData } from './services/dataPreloader'
 import type { DatabaseRow } from './components/Getdata.vue'
 
 // Global loading state
@@ -133,15 +133,21 @@ onMounted(async () => {
   try {
     // Preload all data from database
     const data = await preloadAllData()
-    
-    // Preload all images
-    await preloadAllImages(data)
-    
-    // Store preloaded data
+    // Preload only critical images for first paint, but don't block too long
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1200))
+    await Promise.race([preloadCriticalImages(data), timeout])
+
+    // Store preloaded data and render immediately
     preloadedData.value = data
-    
-    // Done loading
     isLoading.value = false
+
+    // Warm the rest of the images in the background at idle time (non-blocking)
+    const warmup = () => preloadAllImages(data).catch(() => {/* ignore warmup failures */})
+    if ('requestIdleCallback' in window) {
+      ;(window as any).requestIdleCallback(warmup, { timeout: 2000 })
+    } else {
+      setTimeout(warmup, 0)
+    }
     
     // Set up scroll listener after content is ready
     window.addEventListener('scroll', throttledHandleScroll, { passive: true })

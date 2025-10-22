@@ -20,7 +20,11 @@ const emit = defineEmits<{
 
 const overlayVisible = computed<boolean>(() => Boolean(props.item && props.item.image))
 const overlaySrc = computed<string>(() => (props.item?.image ? props.item.image : ''))
-const bgOverlayVisible = computed<boolean>(() => Boolean(props.item && props.item.overlay))
+const bgOverlayVisible = computed<boolean>(() => {
+  // Only sections that use overlay explicitly
+  const allowOverlay = props.sectionId === 'float-section' || props.sectionId === 'juice-section'
+  return Boolean(allowOverlay && props.item && props.item.overlay)
+})
 const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.overlay : ''))
 </script>
 
@@ -32,7 +36,7 @@ const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.ov
     </div>
     <div class="product-wrap">
       <!-- Main image from database with animation (no container) -->
-      <img v-if="overlayVisible" :src="overlaySrc" alt="product" class="main-image" :class="{ 'zoom-in': props.inView }" />
+      <img v-if="overlayVisible" :src="overlaySrc" alt="product" class="main-image" :class="{ 'stomp-in': props.inView && props.sectionId === 'juice-section', 'zoom-in': props.inView && props.sectionId !== 'juice-section' }" />
 
       <!-- Prices section -->
       <div class="prices drop-down">
@@ -176,8 +180,29 @@ const bgOverlaySrc = computed<string>(() => (props.item?.overlay ? props.item.ov
   100% { transform: scale(1); }
 }
 
+/* Stomp in animation - drops from above with bounce */
+@keyframes stompIn {
+  0% { 
+    transform: translateY(-100vh) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  70% { 
+    transform: translateY(0) scale(1.1);
+  }
+  85% {
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% { 
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Trigger animations only when in view */
 .animate .zoom-in { animation: zoomInFront 800ms cubic-bezier(.2,.7,.3,1) both; }
+.animate .stomp-in { animation: stompIn 900ms cubic-bezier(.34,1.56,.64,1) both; }
 
 .flavor-row {
   width: 100%;

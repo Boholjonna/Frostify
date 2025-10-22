@@ -14,13 +14,27 @@ export interface PreloadedData {
  */
 export async function preloadAllData(): Promise<PreloadedData> {
   const supabase = getSupabaseClient()
+  // Select only the columns used by Layout.vue to reduce payload size
+  // Some tables (float, juice) have 'overlay'; others do not.
+  const COLUMNS_BASE = [
+    'id',
+    'flavor',
+    'image',
+    'bg',
+    'price-s',
+    'price-m',
+    'price-l',
+    'price-bgcolor',
+    'text-color'
+  ].join(',')
+  const COLUMNS_WITH_OVERLAY = `${COLUMNS_BASE},overlay`
   
   // Fetch all tables in parallel for maximum speed
   const [icecreamResult, milkteaResult, floatResult, juiceResult] = await Promise.all([
-    supabase.from('ice-cream').select('*').order('id', { ascending: true }),
-    supabase.from('milk-tea').select('*').order('id', { ascending: true }),
-    supabase.from('float').select('*').order('id', { ascending: true }),
-    supabase.from('juice').select('*').order('id', { ascending: true })
+    supabase.from('ice-cream').select(COLUMNS_BASE).order('id', { ascending: true }),
+    supabase.from('milk-tea').select(COLUMNS_BASE).order('id', { ascending: true }),
+    supabase.from('float').select(COLUMNS_WITH_OVERLAY).order('id', { ascending: true }),
+    supabase.from('juice').select(COLUMNS_WITH_OVERLAY).order('id', { ascending: true })
   ])
 
   // Check for errors
@@ -30,10 +44,10 @@ export async function preloadAllData(): Promise<PreloadedData> {
   if (juiceResult.error) throw new Error(`Failed to load juice: ${juiceResult.error.message}`)
 
   return {
-    icecream: (icecreamResult.data || []) as DatabaseRow[],
-    milktea: (milkteaResult.data || []) as DatabaseRow[],
-    float: (floatResult.data || []) as DatabaseRow[],
-    juice: (juiceResult.data || []) as DatabaseRow[]
+    icecream: ((icecreamResult.data || []) as unknown) as DatabaseRow[],
+    milktea: ((milkteaResult.data || []) as unknown) as DatabaseRow[],
+    float: ((floatResult.data || []) as unknown) as DatabaseRow[],
+    juice: ((juiceResult.data || []) as unknown) as DatabaseRow[]
   }
 }
 
@@ -56,11 +70,49 @@ export async function preloadAllImages(data: PreloadedData): Promise<void> {
   const promises = Array.from(imageUrls).map(url => {
     return new Promise<void>((resolve) => {
       const img = new Image()
+      // Hint the browser that these are non-critical warmups
+      ;(img as any).decoding = 'async'
+      try { (img as any).fetchPriority = 'low' } catch {}
       img.onload = () => resolve()
       img.onerror = () => {
         console.warn(`Failed to preload image: ${url}`)
         resolve() // Continue even if an image fails
       }
+      img.src = url
+    })
+  })
+
+  await Promise.all(promises)
+}
+
+/**
+ * Preload only the first/primary images to speed up initial render.
+ * The rest can be warmed in the background.
+ */
+export async function preloadCriticalImages(data: PreloadedData): Promise<void> {
+  const criticalUrls: string[] = []
+  const firstOf = (rows: DatabaseRow[]) => (rows && rows.length ? rows[0] : null)
+
+  const firstIce = firstOf(data.icecream)
+  const firstMilk = firstOf(data.milktea)
+  const firstFloat = firstOf(data.float)
+  const firstJuice = firstOf(data.juice)
+
+  ;[firstIce, firstMilk, firstFloat, firstJuice].forEach(item => {
+    if (!item) return
+    if (item.bg) criticalUrls.push(item.bg)
+    if (item.image) criticalUrls.push(item.image)
+    if (item.overlay) criticalUrls.push(item.overlay)
+  })
+
+  const promises = criticalUrls.map(url => {
+    return new Promise<void>((resolve) => {
+      const img = new Image()
+      // Critical images should be fetched with higher priority
+      ;(img as any).decoding = 'async'
+      try { (img as any).fetchPriority = 'high' } catch {}
+      img.onload = () => resolve()
+      img.onerror = () => resolve()
       img.src = url
     })
   })
