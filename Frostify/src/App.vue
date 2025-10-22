@@ -5,6 +5,7 @@ import Icecream from './components/Icecream.vue'
 import Milktea from './components/Milktea.vue'
 import Float from './components/Float.vue'
 import Juice from './components/Juice.vue'
+import Endpage from './components/Endpage.vue'
 import StickyHeader from './components/StickyHeader.vue'
 import { preloadAllData, preloadAllImages, preloadCriticalImages, type PreloadedData } from './services/dataPreloader'
 import type { DatabaseRow } from './components/Getdata.vue'
@@ -204,6 +205,9 @@ onBeforeUnmount(() => {
     </section>
     <section id="juice-section">
       <Juice :preloaded-data="preloadedData?.juice || []" />
+    </section>
+    <section id="endpage-section">
+      <Endpage />
     </section>
     
   </main>
