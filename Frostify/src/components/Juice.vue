@@ -141,25 +141,19 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	<section ref="rootRef" id="juice-section" class="juice-root" :class="{ animate: inView }" :style="containerStyle">
 		<div class="juice-wrap">
 			<!-- Main image from database with animation -->
-			<div v-if="overlayVisible" class="main-image-container">
-				<img :src="overlaySrc" alt="juice" class="main-image" :class="{ 'zoom-in': inView }" />
-			</div>
+			<img v-if="overlayVisible" :src="overlaySrc" alt="juice" class="main-image" :class="{ 'zoom-in': inView }" />
 
 			<!-- Prices section -->
 			<div class="prices drop-down">
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-s'] || 'S-—' }}</span>
 				</div>
-				<div class="price-circle" :style="{ background: priceBg }">					<span class="price-text">{{ item?.['price-m'] || 'M-—' }}</span>
+				<div class="price-circle" :style="{ background: priceBg }">
+					<span class="price-text">{{ item?.['price-m'] || 'M-—' }}</span>
 				</div>
 				<div class="price-circle" :style="{ background: priceBg }">
 					<span class="price-text">{{ item?.['price-l'] || 'L-—' }}</span>
 				</div>
-			</div>
-
-			<!-- Keep the stage for layout but hide its image -->
-			<div class="image-stage pop-in">
-				<div class="image-frame image-frame--hidden"></div>
 			</div>
 
 			<div class="flavor-row fade-up">
@@ -169,11 +163,6 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 
 			<div v-if="loading" class="status">Loading…</div>
 			<div v-else-if="errorMessage" class="status error">{{ errorMessage }}</div>
-		</div>
-
-		<!-- Centered overlay image at 90% viewport height -->
-		<div v-if="overlayVisible" class="image-overlay">
-			<img class="overlay-img" :class="[inView ? 'zoom-in' : '']" :src="overlaySrc" alt="juice" />
 		</div>
 	</section>
 </template>
@@ -203,7 +192,9 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	gap: 20px;
 	padding: 20px 16px;
 	box-sizing: border-box;
-	margin-top: -40px; /* Pull content up slightly */
+	margin-top: -40px;
+	position: relative;
+	z-index: 2;
 }
 
 
@@ -233,52 +224,13 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 	font-weight: 600;
 }
 
-/* Main image container */
-.main-image-container {
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex: 1;
-	padding: 0;
-}
-
 .main-image {
-	max-width: 80%; /* Reduced by 20% */
+	max-width: 80%;
 	height: auto;
-	max-height: 60vh; /* Reduced by 20% from 75vh */
+	max-height: 60vh;
 	object-fit: contain;
 	transform-origin: center bottom;
-}
-
-.image-frame {
-	position: relative;
-	background: transparent; /* transparent stage */
-	width: min(515px, 90vw);
-	min-width: 320px;
-	height: 100%;
-	overflow: visible; /* allow overlay inside stage, but root hides overflow */
-}
-
-.image-frame--hidden { display: none; }
-
-/* Overlay image centered in front of everything */
-.image-overlay {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	pointer-events: none;
-	z-index: 5;
-}
-
-.overlay-img {
-	height: 90vh; /* 90% of viewport height */
-	width: auto;
-	max-width: 92vw;
-	transform-origin: 50% 90%;
-	filter: drop-shadow(0 18px 30px rgba(0,0,0,0.15));
+	margin-top: 50px;
 	transition: opacity 0.3s ease-in-out;
 }
 
