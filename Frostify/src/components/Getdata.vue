@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '../services/supabase'
 
 // Define the generic type for database rows
 export interface DatabaseRow {
@@ -48,36 +48,14 @@ const currentRow = computed<DatabaseRow | null>(() => {
   return data.value[currentIndex.value]
 })
 
-// Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-
-let supabase: SupabaseClient | null = null
-
 // Function to fetch data from database with optimizations
 const fetchData = async () => {
   try {
     loading.value = true
     error.value = ''
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase environment variables are missing. Define VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
-    }
-
-    if (!supabase) {
-      // Initialize Supabase client with performance optimizations
-      supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: false, // Disable session persistence for faster queries
-          autoRefreshToken: false
-        },
-        global: {
-          headers: {
-            'cache-control': 'max-age=3600' // Enable caching
-          }
-        }
-      })
-    }
+    // Get singleton Supabase client instance
+    const supabase = getSupabaseClient()
 
     // Optimized query with single request
     const { data: fetchedData, error: fetchError } = await supabase

@@ -11,7 +11,15 @@ const triggerIceCreamAnimation = inject<() => void>('triggerIceCreamAnimation')
 // Get the navigation function from the parent
 const navigate = inject<(section: string) => void>('navigate')
 
+// Get the showHeader function from the parent
+const showHeader = inject<() => void>('showHeader')
+
 const scrollToProducts = () => {
+  // Show the header when button is clicked
+  if (showHeader) {
+    showHeader()
+  }
+  
   // Trigger animation immediately
   if (triggerIceCreamAnimation) {
     triggerIceCreamAnimation()

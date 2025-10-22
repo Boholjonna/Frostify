@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 import Layout from './Layout.vue'
 
 type MilkteaRow = DatabaseRow
 
+// Props
+interface Props {
+  preloadedData?: DatabaseRow[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  preloadedData: () => []
+})
+
 const items = ref<MilkteaRow[]>([])
 const currentIndex = ref(0)
-const loading = ref(true)
+const loading = ref(false)
 const errorMessage = ref('')
-const imagesLoaded = ref(false)
+const imagesLoaded = ref(true)
 const item = computed(() => items.value[currentIndex.value] || null)
 
 // in-view detection
@@ -46,6 +55,15 @@ const preloadImages = async (data: MilkteaRow[]) => {
 		imagesLoaded.value = true // Continue anyway
 	}
 }
+
+// Initialize with preloaded data
+watch(() => props.preloadedData, (data) => {
+  if (data && data.length > 0) {
+    items.value = data as MilkteaRow[]
+    currentIndex.value = 0
+    imagesLoaded.value = true
+  }
+}, { immediate: true })
 
 // Event handlers for Getdata component
 const handleDataLoaded = async (data: DatabaseRow[]) => {
@@ -118,12 +136,15 @@ const textColor = computed(() => item.value?.['text-color'] || '#333')
 // Ref to access Getdata's exposed methods
 const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
 
-// Next button delegates to Getdata's nextRow to keep indices in sync
+// Next button
 const nextItem = () => {
-	if (!getdataRef.value) return
+	if (!items.value.length) return
 	inView.value = false
 	setTimeout(() => {
-		getdataRef.value?.nextRow()
+		currentIndex.value = (currentIndex.value + 1) % items.value.length
+		if (getdataRef.value) {
+			getdataRef.value.nextRow()
+		}
 		void document.body.offsetHeight
 		inView.value = true
 	}, 400)
@@ -132,8 +153,9 @@ const nextItem = () => {
 </script>
 
 <template>
-	<!-- Data fetching component -->
+	<!-- Data fetching component (only if no preloaded data) -->
 	<Getdata 
+		v-if="!preloadedData || preloadedData.length === 0"
 		ref="getdataRef"
 		table-name="milk-tea"
 		:columns="'*'"

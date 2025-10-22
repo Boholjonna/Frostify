@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 import Layout from './Layout.vue'
 
 type IceCreamRow = DatabaseRow
 
+// Props
+interface Props {
+  preloadedData?: DatabaseRow[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  preloadedData: () => []
+})
+
 const items = ref<IceCreamRow[]>([])
 const currentIndex = ref(0)
-const loading = ref(true)
+const loading = ref(false) // Start as false since data is preloaded
 const errorMessage = ref('')
-const imagesLoaded = ref(false)
+const imagesLoaded = ref(true) // Images are already preloaded
 
 // Computed property for current item
 const item = computed(() => items.value[currentIndex.value] || null)
@@ -17,12 +26,17 @@ const item = computed(() => items.value[currentIndex.value] || null)
 // Ref to access Getdata's exposed methods
 const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
 
-// Next item function delegates to Getdata's nextRow
+// Next item function
 const nextItem = () => {
-  if (!getdataRef.value) return
+  if (!items.value.length) return
   inView.value = false
   setTimeout(() => {
-    getdataRef.value?.nextRow()
+    // Handle navigation manually when using preloaded data
+    currentIndex.value = (currentIndex.value + 1) % items.value.length
+    // Delegate to Getdata if available (fallback mode)
+    if (getdataRef.value) {
+      getdataRef.value.nextRow()
+    }
     void document.body.offsetHeight
     inView.value = true
   }, 400)
@@ -73,7 +87,16 @@ const preloadImages = async (data: IceCreamRow[]) => {
 	}
 }
 
-// Event handlers for Getdata component
+// Initialize with preloaded data
+watch(() => props.preloadedData, (data) => {
+  if (data && data.length > 0) {
+    items.value = data as IceCreamRow[]
+    currentIndex.value = 0
+    imagesLoaded.value = true
+  }
+}, { immediate: true })
+
+// Event handlers for Getdata component (only used if no preloaded data)
 const handleDataLoaded = async (data: DatabaseRow[]) => {
     if (data && data.length > 0) {
         items.value = data as IceCreamRow[]
@@ -137,8 +160,9 @@ const textColor = computed(() => item.value?.['text-color'] || '#333')
 </script>
 
 <template>
-	<!-- Data fetching component -->
+	<!-- Data fetching component (only if no preloaded data) -->
     <Getdata 
+        v-if="!preloadedData || preloadedData.length === 0"
         ref="getdataRef"
         table-name="ice-cream"
         :columns="'*'"

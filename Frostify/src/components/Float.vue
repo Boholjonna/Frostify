@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 import Layout from './Layout.vue'
 
 type FloatRow = DatabaseRow
 
+// Props
+interface Props {
+  preloadedData?: DatabaseRow[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  preloadedData: () => []
+})
+
 const items = ref<FloatRow[]>([])
 const currentIndex = ref(0)
-const loading = ref(true)
+const loading = ref(false)
 const errorMessage = ref('')
-const imagesLoaded = ref(false)
+const imagesLoaded = ref(true)
 const isTransitioning = ref(false)
-const imageCache = new Map<string, HTMLImageElement>()
 
 // Computed property for current item
 const item = computed(() => items.value[currentIndex.value] || null)
@@ -19,15 +27,18 @@ const item = computed(() => items.value[currentIndex.value] || null)
 // Ref to access Getdata's exposed methods
 const getdataRef = ref<InstanceType<typeof Getdata> | null>(null)
 
-// Next item function delegates to Getdata's nextRow with smooth transition
+// Next item function
 const nextItem = () => {
-  if (!getdataRef.value || isTransitioning.value) return
+  if (!items.value.length || isTransitioning.value) return
   isTransitioning.value = true
   inView.value = false
   
   // Use shorter timeout for smoother transition
   setTimeout(() => {
-    getdataRef.value?.nextRow()
+    currentIndex.value = (currentIndex.value + 1) % items.value.length
+    if (getdataRef.value) {
+      getdataRef.value.nextRow()
+    }
     requestAnimationFrame(() => {
       inView.value = true
       // Reset transition flag after animation completes
@@ -53,41 +64,23 @@ defineExpose({
   }
 })
 
-// Optimized image preloading with caching and parallel loading
+// Preload all images
 const preloadImages = async (data: FloatRow[]) => {
 	imagesLoaded.value = false
 	const imageUrls: string[] = []
 	
-	// Collect all unique image URLs
+	// Collect all image URLs and background URLs
 	data.forEach(item => {
-		if (item.image && !imageCache.has(item.image)) imageUrls.push(item.image)
-		if (item.bg && !imageCache.has(item.bg)) imageUrls.push(item.bg)
-		if (item.overlay && !imageCache.has(item.overlay)) imageUrls.push(item.overlay)
+		if (item.image) imageUrls.push(item.image)
+		if (item.bg) imageUrls.push(item.bg)
 	})
 	
-	// Skip if all images are already cached
-	if (imageUrls.length === 0) {
-		imagesLoaded.value = true
-		return
-	}
-	
-	// Preload images in parallel with aggressive caching
+	// Preload all images
 	const promises = imageUrls.map(url => {
 		return new Promise<void>((resolve) => {
 			const img = new Image()
-			// Set crossOrigin for better caching
-			img.crossOrigin = 'anonymous'
-			// Enable browser caching
-			img.decoding = 'async'
-			
-			img.onload = () => {
-				imageCache.set(url, img)
-				resolve()
-			}
-			img.onerror = () => {
-				console.warn(`Failed to load image: ${url}`)
-				resolve() // Continue even if an image fails
-			}
+			img.onload = () => resolve()
+			img.onerror = () => resolve() // Continue even if an image fails
 			img.src = url
 		})
 	})
@@ -97,9 +90,18 @@ const preloadImages = async (data: FloatRow[]) => {
 		imagesLoaded.value = true
 	} catch (error) {
 		console.error('Error preloading images:', error)
-		imagesLoaded.value = true
+		imagesLoaded.value = true // Continue anyway
 	}
 }
+
+// Initialize with preloaded data
+watch(() => props.preloadedData, (data) => {
+  if (data && data.length > 0) {
+    items.value = data as FloatRow[]
+    currentIndex.value = 0
+    imagesLoaded.value = true
+  }
+}, { immediate: true })
 
 // Event handlers for Getdata component
 const handleDataLoaded = async (data: DatabaseRow[]) => {
@@ -152,12 +154,11 @@ const containerStyle = computed(() => {
 	const backgroundImageUrl = item.value?.bg || ''
 	return {
 		backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
-		transition: 'background-image 0.4s ease-in-out, opacity 0.2s ease-in-out',
+		transition: 'background-image 0.8s ease-in-out, opacity 0.3s ease-in-out',
 		backgroundSize: 'cover',
 		backgroundPosition: 'center',
 		backgroundRepeat: 'no-repeat',
-		opacity: imagesLoaded.value ? '1' : '0',
-		willChange: 'background-image, opacity'
+		opacity: imagesLoaded.value ? '1' : '0'
 	}
 })
 
@@ -166,8 +167,9 @@ const textColor = computed(() => item.value?.['text-color'] || '#333')
 </script>
 
 <template>
-	<!-- Data fetching component -->
+	<!-- Data fetching component (only if no preloaded data) -->
     <Getdata 
+        v-if="!preloadedData || preloadedData.length === 0"
         ref="getdataRef"
         table-name="float"
         :columns="'*'"
@@ -178,69 +180,21 @@ const textColor = computed(() => item.value?.['text-color'] || '#333')
     />
 	
 	<section ref="rootRef">
-		<!-- Only render Layout when data is loaded and images are preloaded -->
 		<Layout 
-			v-if="!loading && imagesLoaded"
 			section-id="float-section"
 			:in-view="inView"
 			:container-style="containerStyle"
 			:price-bg="priceBg"
 			:text-color="textColor"
 			:item="item"
-			:loading="false"
+			:loading="loading"
 			:error-message="errorMessage"
 			:items-length="items.length"
 			@next="nextItem"
 		/>
-		<!-- Loading state -->
-		<div v-else-if="loading" class="loading-container">
-			<div class="loading-spinner"></div>
-			<p class="loading-text">Loading flavors...</p>
-		</div>
-		<!-- Error state -->
-		<div v-else-if="errorMessage" class="error-container">
-			<p class="error-text">{{ errorMessage }}</p>
-		</div>
 	</section>
 </template>
 
 <style scoped>
-.loading-container,
-.error-container {
-	width: 100vw;
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 20px;
-}
-
-.loading-spinner {
-	width: 50px;
-	height: 50px;
-	border: 4px solid rgba(255, 255, 255, 0.3);
-	border-top-color: #ffffff;
-	border-radius: 50%;
-	animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-	to { transform: rotate(360deg); }
-}
-
-.loading-text {
-	color: #ffffff;
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	font-size: 18px;
-	font-weight: 500;
-}
-
-.error-text {
-	color: #ff6b6b;
-	font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-	font-size: 16px;
-	text-align: center;
-	padding: 0 20px;
-}
+/* layout handled by Layout.vue */
 </style>

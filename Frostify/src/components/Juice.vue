@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import Getdata, { type DatabaseRow } from './Getdata.vue'
 
 type JuiceRow = DatabaseRow
 
+// Props
+interface Props {
+  preloadedData?: DatabaseRow[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  preloadedData: () => []
+})
+
 const item = ref<JuiceRow | null>(null)
-const loading = ref(true)
+const loading = ref(false)
 const errorMessage = ref('')
-const imagesLoaded = ref(false)
+const imagesLoaded = ref(true)
 
 // in-view detection
 const rootRef = ref<HTMLElement | null>(null)
@@ -43,6 +52,14 @@ const preloadImages = async (data: JuiceRow[]) => {
 		imagesLoaded.value = true // Continue anyway
 	}
 }
+
+// Initialize with preloaded data
+watch(() => props.preloadedData, (data) => {
+  if (data && data.length > 0) {
+    item.value = data[0] as JuiceRow
+    imagesLoaded.value = true
+  }
+}, { immediate: true })
 
 // Event handlers for Getdata component
 const handleDataLoaded = async (data: DatabaseRow[]) => {
@@ -110,8 +127,9 @@ const overlaySrc = computed<string>(() => (item.value?.image ? item.value.image 
 </script>
 
 <template>
-	<!-- Data fetching component -->
+	<!-- Data fetching component (only if no preloaded data) -->
 	<Getdata 
+		v-if="!preloadedData || preloadedData.length === 0"
 		table-name="juice" 
 		:columns="'*'" 
 		:limit="1"
