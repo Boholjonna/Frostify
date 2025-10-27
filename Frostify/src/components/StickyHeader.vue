@@ -40,7 +40,8 @@ const handleNavigation = (section: string) => {
     'ice cream': 'icecream-section',
     'milk tea': 'milktea-section',
     'float': 'float-section',
-    'juice': 'juice-section'
+    'juice': 'juice-section',
+    'location': 'endpage-section'
   }
   
   const sectionId = sectionIdMap[section]
@@ -94,11 +95,18 @@ const handleNavigation = (section: string) => {
         </span>
       </nav>
 
-      <button class="home-btn" aria-label="Home" @click="handleNavigation('about')">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 3.172l8 7.2V20a1 1 0 0 1-1 1h-4.5a.5.5 0 0 1-.5-.5v-5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5a.5.5 0 0 1-.5.5H3a1 1 0 0 1-1-1v-9.628l8-7.2a2 2 0 0 1 2 0zM12 1a4 4 0 0 0-2.667.992l-8 7.2A2 2 0 0 0 1 10.728V20a3 3 0 0 0 3 3h4.5A2.5 2.5 0 0 0 11 20.5v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5A2.5 2.5 0 0 0 17.5 23H22a3 3 0 0 0 3-3v-9.272a2 2 0 0 0-.333-1.536l-8-7.2A4 4 0 0 0 12 1z"/>
-        </svg>
-      </button>
+      <div class="right-actions">
+        <button class="home-btn" aria-label="Home" @click="handleNavigation('about')">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3.172l8 7.2V20a1 1 0 0 1-1 1h-4.5a.5.5 0 0 1-.5-.5v-5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v5a.5.5 0 0 1-.5.5H3a1 1 0 0 1-1-1v-9.628l8-7.2a2 2 0 0 1 2 0zM12 1a4 4 0 0 0-2.667.992l-8 7.2A2 2 0 0 0 1 10.728V20a3 3 0 0 0 3 3h4.5A2.5 2.5 0 0 0 11 20.5v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5A2.5 2.5 0 0 0 17.5 23H22a3 3 0 0 0 3-3v-9.272a2 2 0 0 0-.333-1.536l-8-7.2A4 4 0 0 0 12 1z"/>
+          </svg>
+        </button>
+        <button class="location-btn" aria-label="Location" @click="handleNavigation('location')">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -129,7 +137,7 @@ const handleNavigation = (section: string) => {
   width: 100%;
   max-width: 1080px;
   display: grid;
-  grid-template-columns: 36px 1fr 36px;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
 }
 
@@ -140,6 +148,13 @@ const handleNavigation = (section: string) => {
 
 .nav { 
   justify-self: center;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
 }
 
 .home-btn {
@@ -159,6 +174,26 @@ const handleNavigation = (section: string) => {
 }
 
 .home-btn:active {
+  transform: translateY(0);
+}
+
+.location-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.location-btn:hover {
+  transform: translateY(-1px);
+}
+
+.location-btn:active {
   transform: translateY(0);
 }
 
